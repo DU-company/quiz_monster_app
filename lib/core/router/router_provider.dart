@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
@@ -19,70 +20,93 @@ final goRouterProvider = Provider((ref) {
     routes: [
       GoRoute(
         path: '/quiz',
-        builder: (_, _) => QuizScreen(),
         name: QuizScreen.routeName,
+        pageBuilder: (_, _) => _slidePage(child: QuizScreen()),
       ),
       GoRoute(
         path: '/wishlist',
-        builder: (_, state) {
-          final items = state.extra as List<QuizModel>;
-          return WishlistScreen(items);
-        },
         name: WishlistScreen.routeName,
+        pageBuilder: (_, state) {
+          final items = state.extra as List<QuizModel>;
+          return _slidePage(child: WishlistScreen(items));
+        },
       ),
       GoRoute(
         path: '/test',
-        builder: (_, _) => TestScreen(),
         name: TestScreen.routeName,
+        pageBuilder: (_, _) => _slidePage(child: TestScreen()),
       ),
 
       /// Settings
       GoRoute(
         path: '/pass',
-        builder: (_, _) => SetPassScreen(),
         name: SetPassScreen.routeName,
+        pageBuilder: (_, _) => _slidePage(child: SetPassScreen()),
       ),
       GoRoute(
         path: '/level',
-        builder: (_, _) => LevelScreen(),
-        name: LevelScreen.routeName,
+        name: SetLevelScreen.routeName,
+        pageBuilder: (_, _) => _slidePage(child: SetLevelScreen()),
       ),
       GoRoute(
         path: '/time',
-        name: TimeScreen.routeName,
-        builder: (_, _) => TimeScreen(),
+        name: SetTimeScreen.routeName,
+        pageBuilder: (_, _) => _slidePage(child: SetTimeScreen()),
       ),
       GoRoute(
         path: '/player',
-        builder: (_, _) => PlayerScreen(),
         name: PlayerScreen.routeName,
+        pageBuilder: (_, _) => _slidePage(child: PlayerScreen()),
       ),
       GoRoute(
         path: '/time-count',
         name: TimeCountScreen.routeName,
-        builder: (_, _) => TimeCountScreen(),
+        pageBuilder: (_, _) => _slidePage(child: TimeCountScreen()),
       ),
 
       /// Quiz
       GoRoute(
         path: '/quiz-detail/:qid',
         name: QuizDetailScreen.routeName,
-        builder: (_, state) {
+        pageBuilder: (_, state) {
           final qid = int.parse(state.pathParameters['qid']!);
-          return QuizDetailScreen(qid);
+          return _slidePage(child: QuizDetailScreen(qid));
         },
       ),
       GoRoute(
         path: '/result',
-        builder: (_, _) => ResultScreen(),
         name: ResultScreen.routeName,
+        pageBuilder: (_, _) => _slidePage(child: ResultScreen()),
       ),
 
       GoRoute(
         path: '/reaction',
-        builder: (_, _) => ReactionRateScreen(),
         name: ReactionRateScreen.routeName,
+        pageBuilder: (_, _) => _slidePage(child: ReactionRateScreen()),
       ),
     ],
   );
 });
+
+CustomTransitionPage<T> _slidePage<T>({
+  required Widget child,
+  Duration duration = const Duration(milliseconds: 250),
+}) {
+  return CustomTransitionPage<T>(
+    transitionDuration: duration,
+    reverseTransitionDuration: duration,
+    child: child,
+    transitionsBuilder:
+        (context, animation, secondaryAnimation, child) {
+          final tween = Tween<Offset>(
+            begin: const Offset(1.0, 0.0),
+            end: Offset.zero,
+          ).chain(CurveTween(curve: Curves.easeOutCubic));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+  );
+}

@@ -16,10 +16,10 @@ import 'package:quiz_monster/ui/settings/time/set_time_view_model.dart';
 import 'package:quiz_monster/ui/settings/time/time_count_screen.dart';
 import 'package:quiz_monster/ui/settings/time/widgets/time_picker.dart';
 
-class TimeScreen extends ConsumerWidget {
+class SetTimeScreen extends ConsumerWidget {
   static String routeName = 'time';
 
-  const TimeScreen({super.key});
+  const SetTimeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

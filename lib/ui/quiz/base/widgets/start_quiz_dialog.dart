@@ -41,7 +41,7 @@ class StartQuizDialog extends ConsumerWidget {
       context.pushNamed(SetPassScreen.routeName);
       return;
     } else {
-      context.pushNamed(LevelScreen.routeName);
+      context.pushNamed(SetLevelScreen.routeName);
       return;
     }
   }

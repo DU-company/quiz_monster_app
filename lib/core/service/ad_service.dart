@@ -7,8 +7,8 @@ final isDevMode = (kDebugMode || kProfileMode);
 class AdMobService {
   static String get bannerAdUnitId {
     if (isDevMode) {
-      if (Platform.isIOS) return dotenv.env['BANNER_TEST_ID_IOS']!;
-      return dotenv.env['BANNER_TEST_ID_ANDROID']!;
+      if (Platform.isIOS) return 'ca-app-pub-3940256099942544/2435281174';
+      return 'ca-app-pub-3940256099942544/9214589741';
     }
 
     /// Release Model

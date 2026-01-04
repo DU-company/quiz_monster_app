@@ -27,7 +27,7 @@ class PassViewModel extends Notifier<PassState> {
 
   /// Setting 화면에서 다음 버튼을 눌렀을 때
   void onTapNext(BuildContext context) {
-    context.pushNamed(TimeScreen.routeName);
+    context.pushNamed(SetTimeScreen.routeName);
 
     /// 결과 화면을 위한 pass/correct 상태값 초기화
     state = state.copyWith(correctWords: [], passedWords: []);

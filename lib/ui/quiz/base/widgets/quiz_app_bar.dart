@@ -29,7 +29,8 @@ class QuizAppBar extends ConsumerWidget {
               renderTop(
                 color: theme.color,
                 onMenuPressed: () {},
-                // onMenuPressed: () => context.pushNamed(TestScreen.routeName),
+                // onMenuPressed: () =>
+                //     context.pushNamed(TestScreen.routeName),
                 onLikePressed: () => context.pushNamed(
                   WishlistScreen.routeName,
                   extra: items,

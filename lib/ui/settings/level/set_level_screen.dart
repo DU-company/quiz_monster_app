@@ -9,10 +9,10 @@ import 'package:quiz_monster/ui/settings/level/level_button.dart';
 import '../time/set_time_screen.dart';
 import 'level_provider.dart';
 
-class LevelScreen extends ConsumerWidget {
+class SetLevelScreen extends ConsumerWidget {
   static String routeName = 'level';
 
-  const LevelScreen({super.key});
+  const SetLevelScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,10 +37,10 @@ class LevelScreen extends ConsumerWidget {
 
   void onOverallPressed(BuildContext context, WidgetRef ref) {
     ref.read(levelProvider.notifier).state = null;
-    context.pushNamed(TimeScreen.routeName);
+    context.pushNamed(SetTimeScreen.routeName);
   }
 
   void onNextPressed(BuildContext context) {
-    context.pushNamed(TimeScreen.routeName);
+    context.pushNamed(SetTimeScreen.routeName);
   }
 }
