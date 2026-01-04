@@ -179,10 +179,10 @@ class _AnswerBox extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.read(themeServiceProvider);
     return Text(
-      showAnswer ? 'A.$answer' : '',
+      showAnswer ? 'A) $answer' : '',
       textAlign: TextAlign.center,
       style: theme.typo.headline6.copyWith(
-        fontSize: context.layout(48, mobile: 24),
+        fontSize: context.layout(32, mobile: 22),
       ),
     );
   }

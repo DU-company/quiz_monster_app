@@ -62,6 +62,14 @@ class PassViewModel extends Notifier<PassState> {
         .update((state) => state + 1);
   }
 
+  /// 한 잔 마시고 패스 추가
+  void addPassByDrinking() async {
+    state = state.copyWith(
+      passCount: state.passCount + 1,
+      didDrink: true,
+    );
+  }
+
   /// 광고 보고 패스 추가되는 로직
   void showAd() {
     ref

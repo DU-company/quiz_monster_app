@@ -11,6 +11,7 @@ class LiarBody extends ConsumerWidget {
   final PageController pageController;
   final int playerCount;
   final bool showAnswer;
+  final int currentIndex;
   final int liarIndex;
   final bool isLastPage;
   final VoidCallback onTapButton;
@@ -19,6 +20,7 @@ class LiarBody extends ConsumerWidget {
     required this.pageController,
     required this.playerCount,
     required this.showAnswer,
+    required this.currentIndex,
     required this.liarIndex,
     required this.items,
     required this.isLastPage,
@@ -43,6 +45,7 @@ class LiarBody extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                /// Label
                 Text(
                   index == playerCount
                       ? '자유롭게 토론을 진행하세요!'
@@ -50,43 +53,82 @@ class LiarBody extends ConsumerWidget {
                   style: theme.typo.headline6,
                 ),
                 const SizedBox(height: 8),
-                Container(
-                  height: 160,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (showAnswer)
-                          Text(
-                            isLiar
-                                ? '당신은 라이어 입니다.\n있는 힘 껏 아는 척을 해 주세요.'
-                                : model.answer,
-                            textAlign: TextAlign.center,
-                            style: theme.typo.headline6.copyWith(
-                              color: theme.color.secondary,
-                            ),
-                          ),
-                        if (!showAnswer)
-                          Center(
-                            child: PrimaryButton(
-                              label: isLastPage ? '토론 끝내고 정답 보기' : '단어 보기',
-                              onPressed: (isLastPage && showAnswer)
-                                  ? null
-                                  : onTapButton,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+
+                /// Box
+                _AnswerBox(
+                  currentIndex: currentIndex,
+                  isLiar: isLiar,
+                  isLastPage: isLastPage,
+                  showAnswer: showAnswer,
+                  answer: model.answer,
+                  onTapButton: onTapButton,
                 ),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _AnswerBox extends ConsumerWidget {
+  final int currentIndex;
+  final bool isLiar;
+  final bool isLastPage;
+  final bool showAnswer;
+  final String answer;
+  final VoidCallback onTapButton;
+  const _AnswerBox({
+    super.key,
+    required this.currentIndex,
+    required this.isLiar,
+    required this.isLastPage,
+    required this.showAnswer,
+    required this.answer,
+    required this.onTapButton,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ref.read(themeServiceProvider);
+    return Container(
+      height: 160,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (!isLastPage)
+              Text(
+                'PLAYER ${currentIndex + 1}',
+                style: theme.typo.subtitle1.copyWith(
+                  color: theme.color.secondary,
+                ),
+              ),
+            if (!isLastPage) const SizedBox(height: 16),
+            if (showAnswer)
+              Text(
+                isLiar ? '당신은 라이어 입니다.\n있는 힘 껏 아는 척을 해 주세요.' : answer,
+                textAlign: TextAlign.center,
+                style: theme.typo.headline6.copyWith(
+                  color: theme.color.secondary,
+                ),
+              ),
+            if (!showAnswer)
+              Center(
+                child: PrimaryButton(
+                  label: isLastPage ? '토론 끝내고 정답 보기' : '단어 보기',
+                  onPressed: (isLastPage && showAnswer)
+                      ? null
+                      : onTapButton,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

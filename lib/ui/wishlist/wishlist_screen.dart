@@ -20,7 +20,6 @@ class WishlistScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bannerAd = ref.watch(bannerAdViewModelProvider);
     final theme = ref.read(themeServiceProvider);
     final wishlist = ref.watch(wishlistViewModelProvider);
 
@@ -42,14 +41,6 @@ class WishlistScreen extends ConsumerWidget {
         ),
       ),
 
-      /// Banner Ad
-      bottomNavigationBar: SizedBox(
-        height: 100,
-        child: bannerAd == null
-            ? null
-            : AdWidget(key: ValueKey('wishlist_key'), ad: bannerAd),
-      ),
-
       /// Wishlist
       child: Column(
         children: [
@@ -68,8 +59,8 @@ class WishlistScreen extends ConsumerWidget {
             Expanded(
               child: ListView.separated(
                 physics: BouncingScrollPhysics(),
-                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemCount: pList.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final model = pList[index];
                   return GestureDetector(

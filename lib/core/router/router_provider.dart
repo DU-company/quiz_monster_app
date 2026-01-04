@@ -51,8 +51,7 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/time',
         name: SetTimeScreen.routeName,
-        builder: (context, state) => SetTimeScreen(),
-        // pageBuilder: (_, _) => _slidePage(child: SetTimeScreen()),
+        pageBuilder: (_, _) => _slidePage(child: SetTimeScreen()),
       ),
       GoRoute(
         path: '/player',
@@ -62,7 +61,7 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/time-count',
         name: TimeCountScreen.routeName,
-        pageBuilder: (_, _) => _slidePage(child: TimeCountScreen()),
+        builder: (_, _) => TimeCountScreen(),
       ),
 
       /// Quiz
@@ -78,13 +77,6 @@ final goRouterProvider = Provider((ref) {
         path: '/result',
         name: ResultScreen.routeName,
         pageBuilder: (_, _) => _slidePage(child: ResultScreen()),
-      ),
-
-      GoRoute(
-        path: '/reaction',
-        name: ReactionRateScreen.routeName,
-        pageBuilder: (_, _) =>
-            _slidePage(child: ReactionRateScreen()),
       ),
     ],
   );

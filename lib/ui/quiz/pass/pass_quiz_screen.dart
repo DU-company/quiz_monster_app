@@ -69,10 +69,17 @@ class PassQuizScreen extends ConsumerWidget {
         children: [
           if (isAdLoaded && !isGameOver)
             PrimaryButton(
-              label: '광고 보고 패스 추가',
+              label: '광고 보고 패스 추가 [± 30초]',
               onPressed: () => viewModel.showAd(),
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          if (!state.didDrink && !isGameOver)
+            PrimaryButton(
+              label: '한 잔 마시고 패스 추가🍺',
+              onPressed: () => viewModel.addPassByDrinking(),
+            ),
+          const SizedBox(height: 8),
+
           if (isGameOver) _GameOver(),
           if (!isGameOver)
             _PassFooter(

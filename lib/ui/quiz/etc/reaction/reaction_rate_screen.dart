@@ -16,7 +16,6 @@ import 'package:quiz_monster/ui/quiz/etc/reaction/widgets/reaction_circle.dart';
 import 'package:quiz_monster/ui/quiz/etc/reaction/widgets/replay_dialog.dart';
 
 class ReactionRateScreen extends ConsumerWidget {
-  static String routeName = 'reaction';
   const ReactionRateScreen({super.key});
 
   @override
@@ -38,42 +37,39 @@ class ReactionRateScreen extends ConsumerWidget {
         reactionState.currentStep == 5 &&
         reactionState.result.isNotEmpty;
 
-    return DefaultLayout(
-      needWillPopScope: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          /// AppBar
-          ReactionAppBar(
-            onTapBack: () => onTapBack(context),
-            step: reactionState.currentStep,
-          ),
-          // UI 멈춤 방지
-          CircularProgressIndicator(color: Colors.transparent),
-          QuizDetailLayout(
-            /// Body
-            body: isGameOver
-                ? ReactionAverageBox(
-                    testResults: reactionState.resultList,
-                  )
-                : ReactionCircle(
-                    onTapCircle: viewModel.onTapCircle,
-                    isGreen: reactionState.isGreen,
-                    label: reactionState.result,
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        /// AppBar
+        ReactionAppBar(
+          onTapBack: () => onTapBack(context),
+          step: reactionState.currentStep,
+        ),
+        // UI 멈춤 방지
+        CircularProgressIndicator(color: Colors.transparent),
+        QuizDetailLayout(
+          /// Body
+          body: isGameOver
+              ? ReactionAverageBox(
+                  testResults: reactionState.resultList,
+                )
+              : ReactionCircle(
+                  onTapCircle: viewModel.onTapCircle,
+                  isGreen: reactionState.isGreen,
+                  label: reactionState.result,
+                ),
 
-            /// Footer
-            footer: PrimaryButton(
-              label: isGameOver ? '다시 시작' : '다음',
-              onPressed: isStepOver
-                  ? isGameOver
-                        ? () => shoReplayDialog(context, ref)
-                        : viewModel.onTapNext
-                  : null,
-            ),
+          /// Footer
+          footer: PrimaryButton(
+            label: isGameOver ? '다시 시작' : '다음',
+            onPressed: isStepOver
+                ? isGameOver
+                      ? () => shoReplayDialog(context, ref)
+                      : viewModel.onTapNext
+                : null,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

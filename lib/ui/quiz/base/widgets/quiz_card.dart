@@ -82,7 +82,7 @@ class _ImageBox extends StatelessWidget {
       top: 0,
       right: 0,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
         child: Image.asset(
           'assets/img/black$randomNumber.png',
           width: 150,

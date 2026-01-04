@@ -28,7 +28,7 @@ class QuizDetailCard extends ConsumerWidget {
           const SizedBox(height: 16),
 
           /// 이미지 링크가 있으면 이미지를 보여준다
-          if (detail.imgUrl != null)
+          if (detail.imgUrl != null && detail.imgUrl!.isNotEmpty)
             Expanded(child: _ImageBox(imgUrl: detail.imgUrl!)),
 
           /// 질문이 있다면 질문을 UI에 보여준다
@@ -84,10 +84,10 @@ class _QuestionBox extends ConsumerWidget {
       height: 180,
       child: Center(
         child: Text(
-          'Q.$question',
+          'Q) $question',
           textAlign: TextAlign.center,
           style: theme.typo.headline6.copyWith(
-            fontSize: context.layout(36, mobile: 24),
+            fontSize: context.layout(32, mobile: 24),
           ),
         ),
       ),

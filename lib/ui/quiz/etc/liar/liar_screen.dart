@@ -18,8 +18,9 @@ import 'package:quiz_monster/core/provider/page_controller_provider.dart';
 import 'package:quiz_monster/ui/quiz/detail/widgets/quiz_detail_success_view.dart';
 
 class LiarGameScreen extends ConsumerWidget {
+  final String title;
   final List<QuizDetailModel> items;
-  const LiarGameScreen(this.items);
+  const LiarGameScreen({required this.title, required this.items});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,7 +40,7 @@ class LiarGameScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         LiarAppBar(
-          label: isLastPage ? '' : 'PLAYER ${currentIndex + 1}',
+          label: title,
           onBackPressed: () => onBackPressed(context, ref),
         ),
         QuizDetailLayout(
@@ -49,6 +50,7 @@ class LiarGameScreen extends ConsumerWidget {
                 pageController: pageController,
                 playerCount: playerCount,
                 showAnswer: showAnswer,
+                currentIndex: currentIndex,
                 liarIndex: liarIndex,
                 items: items,
                 isLastPage: isLastPage,
@@ -98,6 +100,7 @@ class LiarGameScreen extends ConsumerWidget {
       context: context,
       builder: (context) => ExitDialog(
         onTapConfirm: () {
+          context.pop();
           ref.read(currentIndexProvider.notifier).state = 0;
           ref.read(showAnswerProvider.notifier).state = false;
           context.goNamed(QuizScreen.routeName);
