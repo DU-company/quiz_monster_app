@@ -67,7 +67,7 @@ class PassQuizScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          if (isAdLoaded)
+          if (isAdLoaded && !isGameOver)
             PrimaryButton(
               label: '광고 보고 패스 추가',
               onPressed: () => viewModel.showAd(),

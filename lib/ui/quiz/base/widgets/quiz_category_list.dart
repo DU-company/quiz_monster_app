@@ -21,6 +21,7 @@ class QuizCategoryList extends ConsumerWidget {
       child: SizedBox(
         height: 50,
         child: ListView.builder(
+          physics: BouncingScrollPhysics(),
           scrollDirection: Axis.horizontal,
           itemCount: CATEGORIES.length,
           itemBuilder: (context, index) {
@@ -28,6 +29,7 @@ class QuizCategoryList extends ConsumerWidget {
             if (index == CATEGORIES.length) {
               return renderCategoryButton(index, '기타 게임', theme);
             }
+
             /// 일반 카테고리 목록
             return renderCategoryButton(
               index,

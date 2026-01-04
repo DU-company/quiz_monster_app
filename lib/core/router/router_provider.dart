@@ -51,7 +51,8 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/time',
         name: SetTimeScreen.routeName,
-        pageBuilder: (_, _) => _slidePage(child: SetTimeScreen()),
+        builder: (context, state) => SetTimeScreen(),
+        // pageBuilder: (_, _) => _slidePage(child: SetTimeScreen()),
       ),
       GoRoute(
         path: '/player',
@@ -82,7 +83,8 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/reaction',
         name: ReactionRateScreen.routeName,
-        pageBuilder: (_, _) => _slidePage(child: ReactionRateScreen()),
+        pageBuilder: (_, _) =>
+            _slidePage(child: ReactionRateScreen()),
       ),
     ],
   );

@@ -31,6 +31,7 @@ class QuizSuccessView extends ConsumerWidget {
               .toList()
         : items.where((e) => e.isEtc == true).toList();
     return CustomScrollView(
+      physics: BouncingScrollPhysics(),
       slivers: [
         QuizAppBar(items),
         QuizCategoryList(
@@ -40,7 +41,7 @@ class QuizSuccessView extends ConsumerWidget {
           currentIndex: currentIndex,
         ),
         SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
+          padding: EdgeInsets.only(right: 8, left: 8, bottom: 32),
           sliver: SliverList.separated(
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemCount: pList.length,

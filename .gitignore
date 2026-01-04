@@ -35,7 +35,7 @@ migrate_working_dir/
 
 # env
 .env
-lib/ui/test/
+lib/test/
 
 # Symbolication related
 app.*.symbols

@@ -67,6 +67,7 @@ class WishlistScreen extends ConsumerWidget {
           if (pList.isNotEmpty)
             Expanded(
               child: ListView.separated(
+                physics: BouncingScrollPhysics(),
                 separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemCount: pList.length,
                 itemBuilder: (context, index) {
