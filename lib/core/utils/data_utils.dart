@@ -15,7 +15,7 @@ class DataUtils {
       timeInSecForIosWeb: 1,
       backgroundColor: Colors.black,
       textColor: Colors.white,
-      fontSize: 18.0,
+      fontSize: 16.0,
     );
   }
 

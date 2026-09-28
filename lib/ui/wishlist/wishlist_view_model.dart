@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:quiz_monster/core/utils/data_utils.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -40,9 +41,11 @@ class WishlistViewModel extends Notifier<List<int>> {
     if (index == -1) {
       /// 추가
       wishlist.insert(0, qid);
+      DataUtils.showToast(msg: '위시리스트에 추가되었습니다');
     } else {
       /// 삭제
       wishlist.removeAt(index);
+      DataUtils.showToast(msg: '위시리스트에서 삭제되었습니다');
     }
 
     pref.setStringList('wishlist', wishlist);

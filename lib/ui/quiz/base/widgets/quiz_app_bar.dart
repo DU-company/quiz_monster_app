@@ -28,7 +28,7 @@ class QuizAppBar extends ConsumerWidget {
               /// Top
               renderTop(
                 color: theme.color,
-                onMenuPressed: () {},
+                // onMenuPressed: () {},
                 // onMenuPressed: () =>
                 //     context.pushNamed(TestScreen.routeName),
                 onLikePressed: () => context.pushNamed(
@@ -66,7 +66,7 @@ class QuizAppBar extends ConsumerWidget {
 
   Widget renderTop({
     required AppColor color,
-    required VoidCallback onMenuPressed,
+    // required VoidCallback onMenuPressed,
     required VoidCallback onLikePressed,
   }) {
     return Row(

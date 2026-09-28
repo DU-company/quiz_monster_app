@@ -36,6 +36,7 @@ migrate_working_dir/
 # env
 .env
 lib/test/
+docs/
 
 # Symbolication related
 app.*.symbols
@@ -47,3 +48,12 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Claude
+CLAUDE.md
+
+# Codex
+AGENTS.md
+
+# Release automation
+/deploy/
