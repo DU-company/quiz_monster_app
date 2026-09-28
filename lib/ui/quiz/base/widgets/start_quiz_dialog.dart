@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/core/provider/selected_quiz_provider.dart';
+import 'package:quiz_monster/core/utils/data_utils.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
+import 'package:quiz_monster/data/models/quiz_type.dart';
 import 'package:quiz_monster/ui/settings/player/set_player_screen.dart';
 import 'package:quiz_monster/ui/settings/level/set_level_screen.dart';
 import 'package:quiz_monster/ui/settings/pass/set_pass_screen.dart';
@@ -26,18 +28,22 @@ class StartQuizDialog extends ConsumerWidget {
   }
 
   void onTapStart(BuildContext context, WidgetRef ref) {
+    if (model.type == null) {
+      DataUtils.showToast(msg: '앱 업데이트 후 이용할 수 있는 퀴즈입니다.');
+      return;
+    }
     context.pop();
     ref.read(selectedQuizProvider.notifier).state = model;
 
-    if (model.title.contains('라이어 게임')) {
+    if (model.type == QuizType.liar) {
       context.pushNamed(PlayerScreen.routeName);
       return;
     }
-    if (model.title == '반응속도 테스트') {
+    if (model.type == QuizType.reaction) {
       context.pushNamed(TimeCountScreen.routeName);
       return;
     }
-    if (model.hasPass) {
+    if (model.type == QuizType.pass) {
       context.pushNamed(SetPassScreen.routeName);
       return;
     } else {

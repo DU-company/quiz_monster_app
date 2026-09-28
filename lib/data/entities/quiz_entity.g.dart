@@ -1,12 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'quiz_model.dart';
+part of 'quiz_entity.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-QuizModel _$QuizModelFromJson(Map<String, dynamic> json) => QuizModel(
+QuizEntity _$QuizEntityFromJson(Map<String, dynamic> json) => QuizEntity(
       id: (json['id'] as num).toInt(),
       title: json['title'] as String,
       subTitle: json['subTitle'] as String,
@@ -15,11 +15,12 @@ QuizModel _$QuizModelFromJson(Map<String, dynamic> json) => QuizModel(
       isEtc: json['isEtc'] as bool,
     );
 
-Map<String, dynamic> _$QuizModelToJson(QuizModel instance) => <String, dynamic>{
+Map<String, dynamic> _$QuizEntityToJson(QuizEntity instance) =>
+    <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
+      'subTitle': instance.subTitle,
       'desc': instance.desc,
       'hasPass': instance.hasPass,
-      'subTitle': instance.subTitle,
       'isEtc': instance.isEtc,
     };

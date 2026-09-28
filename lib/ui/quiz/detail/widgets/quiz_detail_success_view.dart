@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/data/models/quiz_detail_model.dart';
+import 'package:quiz_monster/data/models/quiz_type.dart';
 import 'package:quiz_monster/ui/quiz/base/quiz_screen.dart';
 import 'package:quiz_monster/core/provider/selected_quiz_provider.dart';
 import 'package:quiz_monster/core/provider/page_controller_provider.dart';
@@ -80,7 +81,7 @@ class _QuizScreenState extends ConsumerState<QuizDetailSuccessView>
         ),
 
         /// Pass
-        if (selectedQuiz!.hasPass && !selectedQuiz.isEtc)
+        if (selectedQuiz!.type == QuizType.pass)
           PassQuizScreen(
             items: widget.items,
             pageController: pageController,
@@ -88,9 +89,8 @@ class _QuizScreenState extends ConsumerState<QuizDetailSuccessView>
           ),
 
         /// NoPass
-        if ((!selectedQuiz.hasPass && !selectedQuiz.isEtc) ||
-            selectedQuiz.title == '나는야 아나운서' ||
-            selectedQuiz.title == '훈민정음')
+        if (selectedQuiz.type == QuizType.image ||
+            selectedQuiz.type == QuizType.question)
           NoPassQuizScreen(
             items: widget.items,
             remainingSeconds: remainingSeconds,
@@ -101,7 +101,7 @@ class _QuizScreenState extends ConsumerState<QuizDetailSuccessView>
           ),
 
         /// ETC
-        if (selectedQuiz.title == '파리가 몇 마리?')
+        if (selectedQuiz.type == QuizType.fly)
           FlyScreen(
             showAnswerPressed: showAnswerPressed,
             onReplay: onReplay,

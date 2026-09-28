@@ -10,6 +10,7 @@ import 'package:quiz_monster/ui/common/widgets/error_message_widget.dart';
 import 'package:quiz_monster/ui/common/widgets/loading_widget.dart';
 import 'package:quiz_monster/ui/quiz/detail/view_model/quiz_detail_view_model.dart';
 import 'package:quiz_monster/ui/quiz/etc/reaction/reaction_rate_screen.dart';
+import 'package:quiz_monster/data/models/quiz_type.dart';
 
 class QuizDetailScreen extends ConsumerWidget {
   static String get routeName => 'quiz-detail';
@@ -38,10 +39,8 @@ class QuizDetailScreen extends ConsumerWidget {
       );
     }
     state as QuizDetailSuccess;
-    final title = state.quiz.title;
-
     // 라이어 게임은 별도의 앱바가 필요 & 다른 게임들과 화면 분리가 필요
-    if (title.contains('라이어 게임')) {
+    if (state.quiz.type == QuizType.liar) {
       return LiarGameScreen(
         title: state.quiz.title,
         items: state.items,
@@ -49,7 +48,7 @@ class QuizDetailScreen extends ConsumerWidget {
     }
 
     // 반응속도 게임은 별도의 앱바가 필요 & 다른 게임들과 화면 분리가 필요
-    if (title.contains('반응속도 테스트')) {
+    if (state.quiz.type == QuizType.reaction) {
       return ReactionRateScreen();
     }
     return QuizDetailSuccessView(
