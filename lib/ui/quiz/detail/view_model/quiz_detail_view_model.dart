@@ -14,15 +14,24 @@ class QuizDetailViewModel extends Notifier<QuizDetailState> {
   QuizRepository get repository => ref.read(quizRepositorProvider);
   @override
   QuizDetailState build() {
-    getQuizDetails();
+    Future.microtask(getQuizDetails);
     return QuizDetailLoading();
   }
 
   Future<void> getQuizDetails() async {
     try {
+      if (!ref.mounted) {
+        return;
+      }
       state = QuizDetailLoading();
 
-      final quiz = ref.read(selectedQuizProvider)!;
+      final quiz = ref.read(selectedQuizProvider);
+      if (quiz == null || quiz.id != qid) {
+        state = QuizDetailError(
+          '선택한 퀴즈를 확인할 수 없습니다.\n목록에서 다시 선택해 주세요.',
+        );
+        return;
+      }
       final level = ref.read(levelProvider);
       final resp = await repository.getQuizDetails(
         quiz: quiz,
@@ -30,9 +39,14 @@ class QuizDetailViewModel extends Notifier<QuizDetailState> {
         take: 30,
         level: level,
       );
+      if (!ref.mounted) {
+        return;
+      }
       state = resp;
     } catch (e) {
-      state = QuizDetailError(e.toString());
+      if (ref.mounted) {
+        state = QuizDetailError(e.toString());
+      }
     }
   }
 }

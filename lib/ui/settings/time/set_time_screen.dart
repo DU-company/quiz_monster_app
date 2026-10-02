@@ -31,7 +31,7 @@ class SetTimeScreen extends ConsumerWidget {
       }
     });
     final selectedQuiz = ref.watch(selectedQuizProvider);
-    final isPassQuiz = selectedQuiz!.type == QuizType.pass;
+    final isPassQuiz = selectedQuiz?.type == QuizType.pass;
     final timeState = ref.watch(timeViewModelProvider);
     final viewModel = ref.read(timeViewModelProvider.notifier);
     return SettingLayout(

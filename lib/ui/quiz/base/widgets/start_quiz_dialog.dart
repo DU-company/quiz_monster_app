@@ -5,6 +5,8 @@ import 'package:quiz_monster/core/provider/selected_quiz_provider.dart';
 import 'package:quiz_monster/core/utils/data_utils.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
 import 'package:quiz_monster/data/models/quiz_type.dart';
+import 'package:quiz_monster/ui/quiz/detail/widgets/quiz_detail_success_view.dart';
+import 'package:quiz_monster/ui/settings/level/level_provider.dart';
 import 'package:quiz_monster/ui/settings/player/set_player_screen.dart';
 import 'package:quiz_monster/ui/settings/level/set_level_screen.dart';
 import 'package:quiz_monster/ui/settings/pass/set_pass_screen.dart';
@@ -34,6 +36,8 @@ class StartQuizDialog extends ConsumerWidget {
     }
     context.pop();
     ref.read(selectedQuizProvider.notifier).state = model;
+    ref.read(levelProvider.notifier).state = null;
+    ref.read(currentIndexProvider.notifier).state = 0;
 
     if (model.type == QuizType.liar) {
       context.pushNamed(PlayerScreen.routeName);

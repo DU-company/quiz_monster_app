@@ -21,7 +21,7 @@ class TimeViewModel extends Notifier<Duration> {
 
   Duration init() {
     final isPassQuiz =
-        ref.read(selectedQuizProvider)!.type == QuizType.pass;
+        ref.read(selectedQuizProvider)?.type == QuizType.pass;
     state = isPassQuiz ? Duration(minutes: 3) : Duration(seconds: 5);
     return state;
   }

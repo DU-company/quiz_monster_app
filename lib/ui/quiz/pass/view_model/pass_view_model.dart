@@ -19,6 +19,10 @@ class PassViewModel extends Notifier<PassState> {
     state = state.copyWith(passCount: number);
   }
 
+  void setItemCount(int itemCount) {
+    state = state.copyWith(itemCount: itemCount);
+  }
+
   /// 패스를 사용하지 않겠다
   void onTapNoPass(BuildContext context) {
     state = state.copyWith(passCount: 0);

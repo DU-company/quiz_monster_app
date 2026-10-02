@@ -39,6 +39,15 @@ class QuizDetailScreen extends ConsumerWidget {
       );
     }
     state as QuizDetailSuccess;
+    if (state.quiz.type != QuizType.fly &&
+        state.quiz.type != QuizType.reaction &&
+        state.items.isEmpty) {
+      return ErrorMessageWidget(
+        message: '선택한 조건에 맞는 문항이 없습니다.\n다른 조건으로 다시 시도해 주세요.',
+        onTap: () => context.goNamed(QuizScreen.routeName),
+        label: '목록으로',
+      );
+    }
     // 라이어 게임은 별도의 앱바가 필요 & 다른 게임들과 화면 분리가 필요
     if (state.quiz.type == QuizType.liar) {
       return LiarGameScreen(
@@ -52,7 +61,7 @@ class QuizDetailScreen extends ConsumerWidget {
       return ReactionRateScreen();
     }
     return QuizDetailSuccessView(
-      title: state.quiz.title,
+      quiz: state.quiz,
       items: state.items,
     );
   }

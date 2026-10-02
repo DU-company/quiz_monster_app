@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/data/models/quiz_detail_model.dart';
 import 'package:quiz_monster/ui/ad/rewarded_ad_provider.dart';
 import 'package:quiz_monster/core/theme/responsive/layout.dart';
 import 'package:quiz_monster/core/theme/theme_provider.dart';
-import 'package:quiz_monster/data/entities/quiz_detail_entity.dart';
 import 'package:quiz_monster/ui/common/layout/quiz_detail_layout.dart';
 import 'package:quiz_monster/ui/common/widgets/primary_button.dart';
 import 'package:quiz_monster/ui/quiz/detail/widgets/quiz_detail_success_view.dart';
 import 'package:quiz_monster/ui/quiz/pass/pass_result_screen.dart';
 import 'package:quiz_monster/ui/quiz/pass/view_model/pass_view_model.dart';
-import 'package:quiz_monster/ui/settings/pass/pass_view_model.dart';
 
-class PassQuizScreen extends ConsumerWidget {
+class PassQuizScreen extends ConsumerStatefulWidget {
   final List<QuizDetailModel> items;
   final PageController pageController;
   final int remainingSeconds;
@@ -27,7 +24,42 @@ class PassQuizScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PassQuizScreen> createState() =>
+      _PassQuizScreenState();
+}
+
+class _PassQuizScreenState extends ConsumerState<PassQuizScreen> {
+  int get itemCount =>
+      widget.items.length > 30 ? 30 : widget.items.length;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(passViewModelProvider.notifier)
+            .setItemCount(itemCount);
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant PassQuizScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.items.length != widget.items.length) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref
+              .read(passViewModelProvider.notifier)
+              .setItemCount(itemCount);
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = ref.read(themeServiceProvider);
     final viewModel = ref.read(passViewModelProvider.notifier);
 
@@ -37,20 +69,23 @@ class PassQuizScreen extends ConsumerWidget {
     final currentIndex = ref.watch(currentIndexProvider);
 
     /// boolean
-    final isGameOver = remainingSeconds == 0 || currentIndex == 30;
+    final isGameOver =
+        widget.remainingSeconds <= 0 ||
+        currentIndex < 0 ||
+        currentIndex >= itemCount;
     final isAdLoaded = ad is AsyncData && ad.value != null;
 
     return QuizDetailLayout(
       body: PageView.builder(
-        controller: pageController,
+        controller: widget.pageController,
         physics: NeverScrollableScrollPhysics(),
-        itemCount: items.length + 1,
+        itemCount: itemCount + 1,
         itemBuilder: (context, index) {
-          final lastItem = index == items.length;
+          final lastItem = index == itemCount;
           if (lastItem) {
             return SizedBox();
           }
-          final model = items[index];
+          final model = widget.items[index];
           return Center(
             child: Text(
               '- ${model.answer} -',
@@ -85,14 +120,22 @@ class PassQuizScreen extends ConsumerWidget {
             _PassFooter(
               passCount: state.passCount,
               isGameOver: isGameOver,
-              onNextPage: () => viewModel.onTapCorrect(
-                pageController,
-                items[currentIndex].answer,
-              ),
-              onPass: () => viewModel.onTapPass(
-                pageController,
-                items[currentIndex].answer,
-              ),
+              onNextPage: () {
+                final index = ref.read(currentIndexProvider);
+                if (index < 0 || index >= itemCount) return;
+                viewModel.onTapCorrect(
+                  widget.pageController,
+                  widget.items[index].answer,
+                );
+              },
+              onPass: () {
+                final index = ref.read(currentIndexProvider);
+                if (index < 0 || index >= itemCount) return;
+                viewModel.onTapPass(
+                  widget.pageController,
+                  widget.items[index].answer,
+                );
+              },
             ),
         ],
       ),

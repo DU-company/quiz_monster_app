@@ -10,7 +10,6 @@ import 'package:quiz_monster/ui/quiz/pass/view_model/pass_view_model.dart';
 import '../../common/widgets/primary_button.dart';
 import '../time/set_time_screen.dart';
 import '../level/level_provider.dart';
-import 'pass_view_model.dart';
 
 class SetPassScreen extends ConsumerWidget {
   static String routeName = 'pass';
