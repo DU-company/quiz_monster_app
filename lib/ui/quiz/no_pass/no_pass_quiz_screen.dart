@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quiz_monster/core/theme/responsive/layout.dart';
 import 'package:quiz_monster/core/theme/theme_provider.dart';
-import 'package:quiz_monster/data/entities/quiz_detail_entity.dart';
 import 'package:quiz_monster/data/models/quiz_detail_model.dart';
 import 'package:quiz_monster/ui/common/layout/quiz_detail_layout.dart';
 import '../../common/widgets/primary_button.dart';
@@ -31,25 +30,35 @@ class NoPassQuizScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final showAnswer = ref.watch(showAnswerProvider);
     final currentIndex = ref.watch(currentIndexProvider);
+    final hasCurrentItem =
+        currentIndex >= 0 && currentIndex < items.length;
     return QuizDetailLayout(
-      body: _Body(
-        items: items,
-        pageController: pageController,
-        showAnswer: showAnswer,
-        onPageChanged: (index) => onPageChanged(index, ref),
-      ),
+      body: hasCurrentItem
+          ? _Body(
+              items: items,
+              pageController: pageController,
+              showAnswer: showAnswer,
+              onPageChanged: (index) => onPageChanged(index, ref),
+            )
+          : const Center(child: Text('표시할 문제가 없습니다.')),
       footer: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          _AnswerBox(
-            showAnswer: showAnswer,
-            answer: items[currentIndex].answer,
-          ),
+          if (hasCurrentItem)
+            _AnswerBox(
+              showAnswer: showAnswer,
+              answer: items[currentIndex].answer,
+            ),
           _TimeOver(remainingSeconds: remainingSeconds),
           _Footer(
-            onPrevPressed: currentIndex == 0 ? null : onPrevPressed,
-            showAnswerPressed: showAnswerPressed,
-            onNextPressed: currentIndex + 1 == items.length
+            onPrevPressed: !hasCurrentItem || currentIndex == 0
+                ? null
+                : onPrevPressed,
+            showAnswerPressed: hasCurrentItem
+                ? showAnswerPressed
+                : null,
+            onNextPressed:
+                !hasCurrentItem || currentIndex + 1 >= items.length
                 ? null
                 : onNextPressed,
           ),

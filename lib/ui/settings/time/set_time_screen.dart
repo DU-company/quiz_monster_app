@@ -9,6 +9,7 @@ import 'package:quiz_monster/ui/ad/ad_finished_provider.dart';
 import 'package:quiz_monster/ui/ad/interstitial_ad_view_model.dart';
 import 'package:quiz_monster/ui/common/widgets/primary_button.dart';
 import 'package:quiz_monster/core/provider/selected_quiz_provider.dart';
+import 'package:quiz_monster/data/models/quiz_type.dart';
 import 'package:quiz_monster/core/theme/responsive/layout.dart';
 import 'package:quiz_monster/core/utils/data_utils.dart';
 import 'package:quiz_monster/ui/common/layout/setting_layout.dart';
@@ -30,11 +31,11 @@ class SetTimeScreen extends ConsumerWidget {
       }
     });
     final selectedQuiz = ref.watch(selectedQuizProvider);
-    final hasPass = selectedQuiz!.hasPass;
+    final isPassQuiz = selectedQuiz?.type == QuizType.pass;
     final timeState = ref.watch(timeViewModelProvider);
     final viewModel = ref.read(timeViewModelProvider.notifier);
     return SettingLayout(
-      label: hasPass ? '총 게임 시간을\n설정해 주세요' : '1인 제한 시간을\n설정해 주세요',
+      label: isPassQuiz ? '총 게임 시간을\n설정해 주세요' : '1인 제한 시간을\n설정해 주세요',
       body: TimePicker(
         newDuration: timeState,
         onTimerDurationChanged: viewModel.onTimeChanged,

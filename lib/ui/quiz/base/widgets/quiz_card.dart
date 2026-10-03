@@ -20,7 +20,6 @@ class QuizCard extends ConsumerWidget {
   final String title;
   final String subtitle;
   final String desc;
-  final bool pass;
   final bool isLiked;
   final VoidCallback onLikePressed;
   const QuizCard({
@@ -29,7 +28,6 @@ class QuizCard extends ConsumerWidget {
     required this.title,
     required this.subtitle,
     required this.desc,
-    required this.pass,
     required this.isLiked,
     required this.onLikePressed,
   });
@@ -44,7 +42,6 @@ class QuizCard extends ConsumerWidget {
       title: model.title,
       subtitle: model.subTitle,
       desc: model.desc,
-      pass: model.hasPass,
       isLiked: isLiked,
       onLikePressed: onLikePressed,
     );

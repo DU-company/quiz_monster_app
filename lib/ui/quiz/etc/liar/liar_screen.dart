@@ -1,11 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/data/models/quiz_detail_model.dart';
 import 'package:quiz_monster/ui/common/layout/quiz_detail_layout.dart';
-import 'package:quiz_monster/ui/common/layout/default_layout.dart';
 import 'package:quiz_monster/ui/quiz/base/quiz_screen.dart';
 import 'package:quiz_monster/ui/quiz/detail/widgets/exit_dialog.dart';
 import 'package:quiz_monster/ui/quiz/etc/liar/liar_view_model.dart';
@@ -62,7 +59,7 @@ class LiarGameScreen extends ConsumerWidget {
           ),
           footer: LiarFooter(
             isBeforeLastPage: isBeforeLastPage,
-            onNext: (isLastPage || !showAnswer)
+            onNext: (items.isEmpty || isLastPage || !showAnswer)
                 ? null
                 : () => onNext(ref, pageController),
           ),

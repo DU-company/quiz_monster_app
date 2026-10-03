@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
+import 'package:quiz_monster/ui/common/layout/default_layout.dart';
+import 'package:quiz_monster/ui/common/widgets/error_message_widget.dart';
 import 'package:quiz_monster/ui/quiz/base/quiz_screen.dart';
 import 'package:quiz_monster/ui/settings/player/set_player_screen.dart';
-import 'package:quiz_monster/ui/quiz/etc/reaction/reaction_rate_screen.dart';
 import 'package:quiz_monster/ui/wishlist/wishlist_screen.dart';
 import 'package:quiz_monster/ui/quiz/detail/quiz_detail_screen.dart';
 import 'package:quiz_monster/ui/settings/level/set_level_screen.dart';
@@ -26,8 +27,19 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/wishlist',
         name: WishlistScreen.routeName,
-        pageBuilder: (_, state) {
-          final items = state.extra as List<QuizModel>;
+        pageBuilder: (context, state) {
+          final items = state.extra;
+          if (items is! List<QuizModel>) {
+            return _slidePage(
+              child: DefaultLayout(
+                child: ErrorMessageWidget(
+                  message: '찜 목록을 불러올 수 없습니다.\n퀴즈 목록에서 다시 열어 주세요.',
+                  onTap: () => context.goNamed(QuizScreen.routeName),
+                  label: '목록으로',
+                ),
+              ),
+            );
+          }
           return _slidePage(child: WishlistScreen(items));
         },
       ),
@@ -68,8 +80,19 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/quiz-detail/:qid',
         name: QuizDetailScreen.routeName,
-        pageBuilder: (_, state) {
-          final qid = int.parse(state.pathParameters['qid']!);
+        pageBuilder: (context, state) {
+          final qid = int.tryParse(state.pathParameters['qid'] ?? '');
+          if (qid == null || qid <= 0) {
+            return _slidePage(
+              child: DefaultLayout(
+                child: ErrorMessageWidget(
+                  message: '퀴즈 주소를 확인할 수 없습니다.\n목록에서 다시 선택해 주세요.',
+                  onTap: () => context.goNamed(QuizScreen.routeName),
+                  label: '목록으로',
+                ),
+              ),
+            );
+          }
           return _slidePage(child: QuizDetailScreen(qid));
         },
       ),

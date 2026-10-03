@@ -4,8 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/data/models/quiz_detail_model.dart';
+import 'package:quiz_monster/data/models/quiz_model.dart';
+import 'package:quiz_monster/data/models/quiz_type.dart';
 import 'package:quiz_monster/ui/quiz/base/quiz_screen.dart';
-import 'package:quiz_monster/core/provider/selected_quiz_provider.dart';
 import 'package:quiz_monster/core/provider/page_controller_provider.dart';
 import 'package:quiz_monster/ui/quiz/etc/fly/fly_screen.dart';
 import 'package:quiz_monster/ui/quiz/no_pass/no_pass_quiz_screen.dart';
@@ -22,10 +23,10 @@ final showAnswerProvider = StateProvider.autoDispose<bool>(
 final currentIndexProvider = StateProvider<int>((ref) => 0);
 
 class QuizDetailSuccessView extends ConsumerStatefulWidget {
-  final String title;
+  final QuizModel quiz;
   final List<QuizDetailModel> items;
   const QuizDetailSuccessView({
-    required this.title,
+    required this.quiz,
     required this.items,
   });
 
@@ -58,7 +59,6 @@ class _QuizScreenState extends ConsumerState<QuizDetailSuccessView>
 
   @override
   Widget build(BuildContext context) {
-    final selectedQuiz = ref.watch(selectedQuizProvider);
     final showAnswer = ref.watch(showAnswerProvider);
     final currentIndex = ref.watch(currentIndexProvider);
     final remainingSeconds = ref.watch(detailTimerViewModelProvider);
@@ -80,7 +80,7 @@ class _QuizScreenState extends ConsumerState<QuizDetailSuccessView>
         ),
 
         /// Pass
-        if (selectedQuiz!.hasPass && !selectedQuiz.isEtc)
+        if (widget.quiz.type == QuizType.pass)
           PassQuizScreen(
             items: widget.items,
             pageController: pageController,
@@ -88,9 +88,8 @@ class _QuizScreenState extends ConsumerState<QuizDetailSuccessView>
           ),
 
         /// NoPass
-        if ((!selectedQuiz.hasPass && !selectedQuiz.isEtc) ||
-            selectedQuiz.title == '나는야 아나운서' ||
-            selectedQuiz.title == '훈민정음')
+        if (widget.quiz.type == QuizType.image ||
+            widget.quiz.type == QuizType.question)
           NoPassQuizScreen(
             items: widget.items,
             remainingSeconds: remainingSeconds,
@@ -101,7 +100,7 @@ class _QuizScreenState extends ConsumerState<QuizDetailSuccessView>
           ),
 
         /// ETC
-        if (selectedQuiz.title == '파리가 몇 마리?')
+        if (widget.quiz.type == QuizType.fly)
           FlyScreen(
             showAnswerPressed: showAnswerPressed,
             onReplay: onReplay,

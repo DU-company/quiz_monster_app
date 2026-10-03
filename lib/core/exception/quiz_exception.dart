@@ -7,3 +7,7 @@ class QuizException extends CustomException {
 class QuizItemException extends CustomException {
   QuizItemException() : super('게임을 불러올 수 없습니다.\n잠시 후 다시 시도해주세요!');
 }
+
+class QuizDataException extends CustomException {
+  QuizDataException(super.message);
+}

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -9,7 +7,6 @@ import 'package:quiz_monster/ui/common/widgets/primary_button.dart';
 import 'package:quiz_monster/ui/common/layout/default_layout.dart';
 import 'package:quiz_monster/core/theme/responsive/layout.dart';
 import 'package:quiz_monster/ui/quiz/base/quiz_screen.dart';
-import 'package:quiz_monster/ui/quiz/detail/widgets/quiz_detail_success_view.dart';
 import 'package:quiz_monster/ui/quiz/pass/view_model/pass_view_model.dart';
 
 class ResultScreen extends ConsumerWidget {
@@ -18,7 +15,6 @@ class ResultScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentIndex = ref.watch(currentIndexProvider);
     final state = ref.watch(passViewModelProvider);
 
     return DefaultLayout(
@@ -33,8 +29,8 @@ class ResultScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _Top(
-                    passedWords: state.passedWords,
-                    currentIndex: currentIndex,
+                    correctCount: state.correctWords.length,
+                    itemCount: state.itemCount,
                   ),
                   Divider(),
                   _Body(
@@ -62,13 +58,13 @@ class ResultScreen extends ConsumerWidget {
 }
 
 class _Top extends ConsumerWidget {
-  final List<String> passedWords;
-  final int currentIndex;
+  final int correctCount;
+  final int itemCount;
 
   const _Top({
     super.key,
-    required this.passedWords,
-    required this.currentIndex,
+    required this.correctCount,
+    required this.itemCount,
   });
 
   @override
@@ -101,7 +97,7 @@ class _Top extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          '${currentIndex - passedWords.length}/30',
+          '$correctCount/$itemCount',
           textAlign: TextAlign.center,
           style: ts.copyWith(fontSize: 48),
         ),

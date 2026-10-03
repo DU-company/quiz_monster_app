@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/core/provider/selected_quiz_provider.dart';
 import 'package:quiz_monster/core/theme/responsive/layout.dart';
 import 'package:quiz_monster/core/theme/theme_provider.dart';
+import 'package:quiz_monster/ui/common/widgets/error_message_widget.dart';
+import 'package:quiz_monster/ui/quiz/base/quiz_screen.dart';
 
 import 'default_layout.dart';
 
@@ -25,8 +28,18 @@ class SettingLayout extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedQuiz = ref.watch(selectedQuizProvider);
 
+    if (selectedQuiz == null) {
+      return DefaultLayout(
+        child: ErrorMessageWidget(
+          message: '퀴즈를 다시 선택해 주세요.',
+          label: '홈으로',
+          onTap: () => context.goNamed(QuizScreen.routeName),
+        ),
+      );
+    }
+
     return DefaultLayout(
-      appBar: AppBar(title: Text(selectedQuiz!.title)),
+      appBar: AppBar(title: Text(selectedQuiz.title)),
       child: context.layout(
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

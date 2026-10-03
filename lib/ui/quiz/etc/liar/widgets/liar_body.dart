@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:quiz_monster/core/provider/page_controller_provider.dart';
 import 'package:quiz_monster/core/theme/theme_provider.dart';
 import 'package:quiz_monster/data/models/quiz_detail_model.dart';
 import 'package:quiz_monster/ui/common/widgets/primary_button.dart';
-import 'package:quiz_monster/ui/settings/player/set_player_view_model.dart';
 
 class LiarBody extends ConsumerWidget {
   final List<QuizDetailModel> items;
@@ -30,6 +28,12 @@ class LiarBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.read(themeServiceProvider);
+
+    if (items.isEmpty) {
+      return const Expanded(
+        child: Center(child: Text('표시할 문제가 없습니다.')),
+      );
+    }
 
     return Expanded(
       child: PageView.builder(

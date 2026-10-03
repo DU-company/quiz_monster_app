@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,19 +9,26 @@ final reactionViewModelProvider = NotifierProvider.autoDispose(
 );
 
 class ReactionViewModel extends Notifier<ReactionState> {
+  Timer? _waitingTimer;
+
   @override
   ReactionState build() {
+    ref.onDispose(() => _waitingTimer?.cancel());
     state = ReactionState();
     _countRandomTime();
     return state;
   }
 
-  // init
-  Future<void> _countRandomTime() async {
-    await Future.delayed(Duration(milliseconds: _setRandomTime()));
-    state = state.copyWith(
-      startTime: DateTime.now().millisecondsSinceEpoch,
-      isGreen: true,
+  void _countRandomTime() {
+    _waitingTimer?.cancel();
+    _waitingTimer = Timer(
+      Duration(milliseconds: _setRandomTime()),
+      () {
+        state = state.copyWith(
+          startTime: DateTime.now().millisecondsSinceEpoch,
+          isGreen: true,
+        );
+      },
     );
   }
 
@@ -46,6 +54,7 @@ class ReactionViewModel extends Notifier<ReactionState> {
         resultList: [...state.resultList, result],
       );
     } else {
+      _waitingTimer?.cancel();
       state = state.copyWith(
         startTime: null,
         isGreen: true,
@@ -74,5 +83,6 @@ class ReactionViewModel extends Notifier<ReactionState> {
       result: '',
       resultList: [],
     );
+    _countRandomTime();
   }
 }

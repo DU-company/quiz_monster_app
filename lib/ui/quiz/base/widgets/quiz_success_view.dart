@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:quiz_monster/core/const/data.dart';
+import 'package:quiz_monster/data/models/quiz_group.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
 import 'package:quiz_monster/ui/quiz/base/widgets/quiz_app_bar.dart';
 import 'package:quiz_monster/ui/quiz/base/widgets/quiz_card.dart';
@@ -12,6 +12,15 @@ import 'package:quiz_monster/ui/wishlist/wishlist_view_model.dart';
 
 final _indexProvider = StateProvider((ref) => 0);
 
+const _groups = [
+  QuizGroup.guess,
+  QuizGroup.liar,
+  QuizGroup.continuation,
+  QuizGroup.charades,
+  QuizGroup.speed,
+  QuizGroup.other,
+];
+
 class QuizSuccessView extends ConsumerWidget {
   final List<QuizModel> items;
   const QuizSuccessView(this.items, {super.key});
@@ -21,15 +30,10 @@ class QuizSuccessView extends ConsumerWidget {
     final wishlist = ref.watch(wishlistViewModelProvider);
     final currentIndex = ref.watch(_indexProvider);
 
-    /// 현재 카테고리에 해당하는 QuizModel로 parsing
-    final pList = currentIndex + 1 < CATEGORIES.length
-        ? items
-              .where(
-                (model) =>
-                    model.title.contains(CATEGORIES[currentIndex]),
-              )
-              .toList()
-        : items.where((e) => e.isEtc == true).toList();
+    final group = _groups[currentIndex];
+    final pList = items
+        .where((model) => model.group == group)
+        .toList();
     return CustomScrollView(
       physics: BouncingScrollPhysics(),
       slivers: [
