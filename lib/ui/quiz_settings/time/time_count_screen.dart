@@ -15,7 +15,7 @@ import 'package:quiz_monster/ui/quiz/base/quiz_screen.dart';
 import 'package:quiz_monster/ui/quiz/etc/reaction/reaction_rate_screen.dart';
 import 'package:quiz_monster/ui/quiz/detail/quiz_detail_screen.dart';
 import 'package:quiz_monster/ui/quiz/detail/view_model/quiz_detail_view_model.dart';
-import 'package:quiz_monster/ui/settings/time/set_time_view_model.dart';
+import 'package:quiz_monster/ui/quiz_settings/time/set_time_view_model.dart';
 
 class TimeCountScreen extends ConsumerStatefulWidget {
   static String routeName = 'time-count';

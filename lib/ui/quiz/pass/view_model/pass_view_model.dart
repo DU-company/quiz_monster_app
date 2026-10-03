@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/ui/ad/rewarded_ad_provider.dart';
 import 'package:quiz_monster/ui/quiz/detail/widgets/quiz_detail_success_view.dart';
 import 'package:quiz_monster/ui/quiz/pass/view_model/pass_state.dart';
-import 'package:quiz_monster/ui/settings/time/set_time_screen.dart';
+import 'package:quiz_monster/ui/quiz_settings/time/set_time_screen.dart';
 
 final passViewModelProvider = NotifierProvider(() => PassViewModel());
 

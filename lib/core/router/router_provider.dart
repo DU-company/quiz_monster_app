@@ -1,3 +1,4 @@
+import 'package:quiz_monster/ui/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,14 +6,14 @@ import 'package:quiz_monster/data/models/quiz_model.dart';
 import 'package:quiz_monster/ui/common/layout/default_layout.dart';
 import 'package:quiz_monster/ui/common/widgets/error_message_widget.dart';
 import 'package:quiz_monster/ui/quiz/base/quiz_screen.dart';
-import 'package:quiz_monster/ui/settings/player/set_player_screen.dart';
+import 'package:quiz_monster/ui/quiz_settings/player/set_player_screen.dart';
 import 'package:quiz_monster/ui/wishlist/wishlist_screen.dart';
 import 'package:quiz_monster/ui/quiz/detail/quiz_detail_screen.dart';
-import 'package:quiz_monster/ui/settings/level/set_level_screen.dart';
+import 'package:quiz_monster/ui/quiz_settings/level/set_level_screen.dart';
 import 'package:quiz_monster/ui/quiz/pass/pass_result_screen.dart';
-import 'package:quiz_monster/ui/settings/time/time_count_screen.dart';
-import 'package:quiz_monster/ui/settings/time/set_time_screen.dart';
-import '../../ui/settings/pass/set_pass_screen.dart';
+import 'package:quiz_monster/ui/quiz_settings/time/time_count_screen.dart';
+import 'package:quiz_monster/ui/quiz_settings/time/set_time_screen.dart';
+import '../../ui/quiz_settings/pass/set_pass_screen.dart';
 import '../../test/test_screen.dart';
 
 final goRouterProvider = Provider((ref) {
@@ -49,7 +50,14 @@ final goRouterProvider = Provider((ref) {
         pageBuilder: (_, _) => _slidePage(child: TestScreen()),
       ),
 
-      /// Settings
+      GoRoute(
+        path: '/settings',
+        name: SettingsScreen.routeName,
+        pageBuilder: (_, _) =>
+            _slidePage(child: const SettingsScreen()),
+      ),
+
+      /// Quiz settings
       GoRoute(
         path: '/pass',
         name: SetPassScreen.routeName,

@@ -7,7 +7,7 @@ import 'package:quiz_monster/data/models/quiz_type.dart';
 import 'package:quiz_monster/core/utils/data_utils.dart';
 import 'package:quiz_monster/ui/ad/ad_count_provider.dart';
 import 'package:quiz_monster/ui/ad/interstitial_ad_view_model.dart';
-import 'package:quiz_monster/ui/settings/time/time_count_screen.dart';
+import 'package:quiz_monster/ui/quiz_settings/time/time_count_screen.dart';
 
 final timeViewModelProvider = NotifierProvider.autoDispose(
   () => TimeViewModel(),

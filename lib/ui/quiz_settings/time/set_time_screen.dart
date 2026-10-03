@@ -13,9 +13,9 @@ import 'package:quiz_monster/data/models/quiz_type.dart';
 import 'package:quiz_monster/core/theme/responsive/layout.dart';
 import 'package:quiz_monster/core/utils/data_utils.dart';
 import 'package:quiz_monster/ui/common/layout/setting_layout.dart';
-import 'package:quiz_monster/ui/settings/time/set_time_view_model.dart';
-import 'package:quiz_monster/ui/settings/time/time_count_screen.dart';
-import 'package:quiz_monster/ui/settings/time/widgets/time_picker.dart';
+import 'package:quiz_monster/ui/quiz_settings/time/set_time_view_model.dart';
+import 'package:quiz_monster/ui/quiz_settings/time/time_count_screen.dart';
+import 'package:quiz_monster/ui/quiz_settings/time/widgets/time_picker.dart';
 
 class SetTimeScreen extends ConsumerWidget {
   static String routeName = 'time';
