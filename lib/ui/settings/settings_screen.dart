@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:quiz_monster/ui/settings/notification_view_model.dart';
+import 'package:quiz_monster/ui/settings/notification_state.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +18,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeServiceProvider);
     final version = ref.watch(appVersionProvider);
+    final notifications = ref.watch(notificationViewModelProvider);
 
     return DefaultLayout(
       appBar: AppBar(
@@ -39,12 +42,27 @@ class SettingsScreen extends ConsumerWidget {
           SwitchListTile(
             title: Text('알림 허용', style: theme.typo.subtitle1),
             subtitle: Text(
-              '알림 기능을 준비하고 있어요.',
+              notifications.description,
               style: theme.typo.body1,
             ),
-            value: false,
-            onChanged: null,
+            value: notifications.switchValue,
+            onChanged:
+                notifications.ready &&
+                    (!notifications.busy || notifications.switchValue)
+                ? (enabled) => ref
+                      .read(notificationViewModelProvider.notifier)
+                      .setEnabled(enabled)
+                : null,
           ),
+          if (!notifications.busy &&
+              (notifications.sync == NotificationSync.failed ||
+                  notifications.sync == NotificationSync.pending))
+            TextButton(
+              onPressed: () => ref
+                  .read(notificationViewModelProvider.notifier)
+                  .refresh(),
+              child: const Text('알림 설정 다시 확인'),
+            ),
           ListTile(
             title: Text('앱 버전', style: theme.typo.subtitle1),
             subtitle: version.when(

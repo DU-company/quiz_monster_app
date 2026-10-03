@@ -6,6 +6,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiz_monster/core/const/data.dart';
 import 'package:quiz_monster/core/router/router_provider.dart';
 import 'package:quiz_monster/core/theme/theme_provider.dart';
+import 'package:quiz_monster/ui/settings/notification_listener.dart'
+    as notifications;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
@@ -24,6 +26,8 @@ void main() async {
   runApp(ProviderScope(child: const _App()));
 }
 
+final _messengerKey = GlobalKey<ScaffoldMessengerState>();
+
 class _App extends ConsumerWidget {
   const _App({super.key});
 
@@ -35,6 +39,11 @@ class _App extends ConsumerWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       routerConfig: router,
+      scaffoldMessengerKey: _messengerKey,
+      builder: (context, child) => notifications.NotificationListener(
+        messengerKey: _messengerKey,
+        child: child ?? const SizedBox.shrink(),
+      ),
       theme: theme,
     );
   }
