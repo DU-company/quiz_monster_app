@@ -57,3 +57,6 @@ AGENTS.md
 
 # Release automation
 /deploy/
+
+# Local Supabase snapshot and copied data
+/.supabase-local/
