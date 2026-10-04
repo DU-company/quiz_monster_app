@@ -23,10 +23,10 @@ Firebase 공식 문서: [Flutter 설정](https://firebase.google.com/docs/cloud-
 
 Edge Function은 자동 주입되는 SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY와 다음 두 secret을 사용한다.
 
-| 이름 | 값 |
-| --- | --- |
-| FIREBASE_SERVICE_ACCOUNT | project_id/client_email/private_key를 가진 JSON |
-| NOTIFICATION_SEND_KEY | 서버 발송 API 전용 32바이트 난수 hex, 앱에 넣지 않음 |
+| 이름                     | 값                                                   |
+| ------------------------ | ---------------------------------------------------- |
+| FIREBASE_SERVICE_ACCOUNT | project_id/client_email/private_key를 가진 JSON      |
+| NOTIFICATION_SEND_KEY    | 서버 발송 API 전용 32바이트 난수 hex, 앱에 넣지 않음 |
 
 비공개 JSON 경로를 받은 뒤 다음 도구로 출력 파일을 만든다. 기존 파일을 덮어쓰지 않고 0600 권한으로 생성하며 값을 출력하지 않는다. 출력 경로는 저장소 밖이나 무시되는 `.env.*`여야 한다.
 
@@ -52,22 +52,28 @@ POST `/functions/v1/send-notification` + `X-Notification-Key` 헤더로 호출�
 요청 JSON 파일의 예시(설치 ID와 작업 ID는 실제 테스트 값으로 교체):
 
 ```json
-{"action":"enqueue","job_id":"11111111-1111-4111-8111-111111111111","title":"퀴즈몬스터 테스트","body":"테스트 알림입니다.","installation_ids":["22222222-2222-4222-8222-222222222222"]}
+{
+  "action": "enqueue",
+  "job_id": "11111111-1111-4111-8111-111111111111",
+  "title": "퀴즈몬스터 테스트",
+  "body": "테스트 알림입니다.",
+  "installation_ids": ["22222222-2222-4222-8222-222222222222"]
+}
 ```
 
 `enqueue`는 등록만 한다. 전체 활성 설치 대상은 installation_ids 대신 `"all":true`를 명시한다. 같은 job_id+같은 내용 재요청은 중복 등록하지 않고, 같은 ID의 다른 내용은 409다. 새 발송은 새 UUID를 사용한다.
 
 ```json
-{"action":"process","job_id":"11111111-1111-4111-8111-111111111111"}
+{ "action": "process", "job_id": "11111111-1111-4111-8111-111111111111" }
 ```
 
-`process`는 호출당 최대 5개 대상을 처리한다. job_id를 생략하면 전체 큐에서 선택하므로 테스트 중에는 항상 ID를 지정한다. 결과의 claimed는 실제 선택한 유효 대상 수이며 OFF/회전으로 건너뛴 행은 포함하지 않는다. claimed=0만으로 전체 완료를 판단하지 않는다.
+`process`는 기본 호출당 최대 5개 대상을 처리한다. `max_batches`를 1~20으로 지정하면 배치당 최대 5개를 순차 처리하며 한 호출의 상한은 100개다. 30초가 지나면 새 배치를 시작하지 않고 진행 중인 결과 저장을 마친다. 결과 저장 오류가 있으면 추가 배치를 중단한다. job_id를 생략하면 전체 큐에서 선택하므로 테스트 중에는 항상 ID를 지정한다. 결과의 claimed는 실제 선택한 유효 대상 수이며 OFF/회전으로 건너뛴 행은 포함하지 않는다. claimed=0만으로 전체 완료를 판단하지 않는다.
 
 ```json
-{"action":"status","job_id":"11111111-1111-4111-8111-111111111111"}
+{ "action": "status", "job_id": "11111111-1111-4111-8111-111111111111" }
 ```
 
-`status`의 remaining이 0이면 처리 종료다. 남아 있으면 next_attempt_at 이후 다시 process를 호출한다. 시간이 만료된 sending은 다음 process/current/finish에서 unknown으로 정리된다. 네트워크 오류가 나면 새 job_id를 만들지 말고 기존 ID 상태부터 확인한다.
+`status`의 state가 waiting이면 아직 대상을 만들지 않은 예약/즉시 작업이다. 이때 remaining=0이어도 완료가 아니다. processing은 처리 중, complete는 처리 종료이며 실패/건너뜀을 포함할 수 있다. expired는 시작 전에 처리 기한을 넘긴 작업이다. next_attempt_at은 다음 조회·처리 판단에 사용한다. 시간이 만료된 sending은 다음 process/current/finish에서 unknown으로 정리된다. 네트워크 오류가 나면 새 job_id를 만들지 말고 기존 ID 상태부터 확인한다.
 
 NOTIFICATION_API_URL에 전체 함수 URL, NOTIFICATION_SEND_KEY에 서버 키를 설정한 터미널에서 다음처럼 호출한다. 키를 명령 인자나 요청 JSON에 넣지 않는다.
 
@@ -82,7 +88,7 @@ deno run --allow-env=NOTIFICATION_API_URL,NOTIFICATION_SEND_KEY --allow-read --a
 `install-notification-schedule.sql`은 hour_kst/minute/title/body를 psql 변수로 받으며 금·토 한국 시간을 UTC 요일/시간으로 변환한다. 시각은 매주 금·토 19:00 Asia/Seoul로 확정했다(hour_kst=19, minute=0, UTC cron `0 10 * * 5,6`). 제목·본문은 미정이므로 설치와 활성화는 아직 하지 않았다. 설치 직후 두 작업은 모두 **비활성**이다.
 
 - quiz-monster-weekend-push: 지정한 한국 날짜별 고정 작업 ID로 전체 활성 대상 enqueue. 동일 날짜 재실행은 중복 등록하지 않는다.
-- quiz-monster-push-worker: 매분 최대 5개 처리. 1분당 처리량은 작은 앱 기준이며 대규모 대상은 처리량 조정이 필요하다. 24시간 지난 미처리 작업은 건너뛴다.
+- quiz-monster-push-worker: 매분 최대 20배치 × 5개를 처리한다. 실제 처리량은 30초 배치 시작 예산과 네트워크 지연에 따라 더 적을 수 있다. 예정 시각부터 24시간을 넘긴 미처리 작업은 건너뛴다. 서로 다른 작업의 대상을 번갈아 선택하여 큰 작업이 다른 발송을 계속 밀어내지 않게 한다.
 
 활성화는 Supabase Cron 화면에서 두 작업을 켜거나 `cron.alter_job(..., active := true)`를 사용한다. 수정 설치도 다시 비활성화되므로 설정을 확인하고 켠다. 제거는 `scripts/remove-notification-schedule.sql`로 두 이름의 작업만 삭제한다. worker를 끄면 재시도도 멈춘다.
 
@@ -104,3 +110,31 @@ DB 확인과 외부 FCM 요청은 하나의 트랜잭션이 아니므로 확인 
 Quiz_Monster 원격 DB에 두 알림 migration과 이력을 적용하고 함수 두 개를 배포했다. iOS 개발 서명 빌드와 APNs entitlement 검증을 통과했다. 서버 secrets 업로드는 자동 승인 검토에서 사용자 명시적 승인이 필요해 차단됐다. 실제 기기 푸시·자동 스케줄은 아직 실행하지 않았다.
 
 사용자의 명시적 승인 후 2026-10-04 서버 secrets 등록을 완료했다. 인증된 API의 대상 없는 요청이 HTTP 200으로 정상 응답했다. 실제 기기 발송과 정기 스케줄 활성화는 아직 미실행이다.
+
+## 대시보드 일회성 예약 (로컬 구현, 운영 적용 전)
+
+기존 enqueue 계약과 금·토 등록 SQL은 그대로 유지한다. 새로운 대시보드 요청에는 `source: "dashboard"`를 보낸다. `scheduled_at`을 생략하거나 null로 보내면 즉시 작업이며, 시간대를 포함한 ISO 시각을 보내면 일회성 예약이다. 제목·본문 제한은 기존과 같다.
+
+```json
+{
+  "action": "enqueue",
+  "source": "dashboard",
+  "job_id": "11111111-1111-4111-8111-111111111111",
+  "title": "공휴일 퀴즈",
+  "body": "오늘도 함께 즐겨요!",
+  "scheduled_at": "2030-01-01T19:00:00+09:00",
+  "all": true
+}
+```
+
+예시는 전체 대상 요청이므로 검증에서는 all 대신 테스트 설치 UUID 배열을 사용한다. 신규 예약은 DB의 현재 시각보다 미래여야 한다. 같은 UUID·내용·대상·시각으로 재요청하면 예정 시각이 지난 후에도 원래 작업을 반환한다. 즉시 요청은 최초 저장 시각을 재사용한다. 즉시↔예약 변경 또는 내용 변경에는 같은 UUID를 사용할 수 없다.
+
+예약 도래 시 서버가 수신 대상을 한 번만 확정한다. 예약 이후 동의한 설치도 시작 시 활성 상태이면 포함되며, 시작 전에 거부한 설치는 제외된다. 시작 후 토큰이 바뀌거나 OFF가 되면 해당 발송은 건너뛴다. 수신자 0건도 시작 완료로 남겨 나중에 새 기기를 추가해 보내지 않는다.
+
+`scheduled_at`은 유효 발송 시각, `is_scheduled`는 사용자 지정 예약 여부, `started_at`은 수신자 확정 여부, `source`는 기존 호출/대시보드 구분이다. 예약을 며칠 전에 등록해도 생성 시각 때문에 만료되지 않으며 유효 발송 시각부터 24시간이 처리 기한이다. 응답의 counts는 기존 기기별 결과를 유지하고 제목·본문·시각·state를 추가한다.
+
+금·토 제목/시간과 무관하게 워커만 설치하려면 `scripts/install-notification-worker.sql`을 사용한다. 기존 금·토 작업은 변경하지 않고 워커만 비활성 상태로 설치한다. pg_cron·pg_net과 Vault 설정 및 대상 DB 확인 후 실행하며, 큐와 영향을 확인하고 활성화해야 예약이 실제 진행된다. 브라우저는 워커 실행에 관여하지 않는다.
+
+배포는 `20261004010000_notification_scheduling.sql` → 새 send-notification 함수 → 워커 설정 순서다. 운영 DB에 적용하기 전 알림 테이블 정의/행을 비공개 경로에 백업한다. 기존 데이터의 started_at은 created_at으로 채워 이미 생성된 수신자를 다시 만들지 않는다. 이 단계에서 운영 DB와 크론을 자동 변경하지 않는다.
+
+복구 시 신규 등록과 워커를 먼저 중지하고 큐를 보존한다. 새 예약이 남은 상태에서 예전 claim으로 워커를 재개하면 예약 시각을 무시할 수 있으므로 허용하지 않는다. 상세 복구 절차는 `rollback/notification_scheduling.md`를 따른다. 이미 FCM에 전달한 알림은 취소할 수 없다.

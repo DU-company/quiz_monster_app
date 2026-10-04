@@ -74,7 +74,7 @@ begin
   assert (select status='unknown' from public.push_deliveries where job_id=k);
 
   k:=gen_random_uuid(); perform public.notification_enqueue(k,'오래된 작업','본문',array[a]);
-  update public.push_jobs set created_at=now()-interval '25 hours' where id=k;
+  update public.push_jobs set scheduled_at=now()-interval '25 hours' where id=k;
   select count(*) into n from public.notification_claim(k,1); assert n=0;
   assert (select status='skipped' from public.push_deliveries where job_id=k);
   k:=gen_random_uuid(); perform public.notification_enqueue(k,'회전 전','본문',array[a]);

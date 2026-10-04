@@ -123,11 +123,7 @@ class NotificationRepository {
           response.enabled != outgoing.payload.shouldReceive) {
         throw NotificationConflictException();
       }
-      await _recordServer(
-        outgoing,
-        response.revision,
-        acknowledged: true,
-      );
+      await _recordServer(outgoing, response.revision);
     } on NotificationConflictException {
       rethrow;
     } on NotificationAuthException {
@@ -147,20 +143,13 @@ class NotificationRepository {
     }
   }
 
-  // 늦게 도착한 응답은 더 최신인 로컬 요청을 완료 처리하지 않는다.
+  // 늦게 도착한 응답도 서버 번호만 기록하고 최신 로컬 선택·요청 번호는 보존한다.
   Future<void> _recordServer(
     NotificationInstallation sent,
-    int revision, {
-    bool acknowledged = false,
-  }) => _storage(() async {
+    int revision,
+  ) => _storage(() async {
     final current = await store.read();
     if (current == null || current.id != sent.id) return;
-    await store.write(
-      current.recordServer(
-        revision,
-        acknowledged:
-            current.revision == sent.revision && acknowledged,
-      ),
-    );
+    await store.write(current.recordServer(revision));
   });
 }

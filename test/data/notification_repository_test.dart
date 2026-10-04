@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiz_monster/core/exception/notification_exception.dart';
@@ -85,7 +86,7 @@ void main() {
         expect(store.value!.id, sent.id);
         expect(store.value!.secret, sent.secret);
         expect(store.value!.payload.token, 'token-a');
-        expect(store.value!.acknowledged, isFalse);
+        expect(store.value!.revision, sent.revision);
         expect(sent.id, matches(RegExp(r'^[a-f0-9-]{36}$')));
         expect(sent.secret, matches(RegExp(r'^[a-f0-9]{64}$')));
         return const NotificationSyncEntity(
@@ -94,7 +95,7 @@ void main() {
         );
       };
       await sync();
-      expect(store.value!.acknowledged, isTrue);
+      expect(store.value!.observedRevision, store.value!.revision);
     },
   );
 
@@ -108,7 +109,7 @@ void main() {
         throwsA(isA<NotificationException>()),
       );
       final first = source.requests.single;
-      expect(store.value!.acknowledged, isFalse);
+      expect(store.value!.revision, source.requests.last.revision);
       repository = NotificationRepository(source, store);
       source.onSync = null;
       await sync();
@@ -117,7 +118,7 @@ void main() {
       expect(retry.secret, first.secret);
       expect(retry.revision, first.revision);
       expect(retry.payload.matches(first.payload), isTrue);
-      expect(store.value!.acknowledged, isTrue);
+      expect(store.value!.observedRevision, store.value!.revision);
     },
   );
 
@@ -141,11 +142,12 @@ void main() {
       );
       await pending;
       expect(store.value!.payload.enabled, isFalse);
-      expect(store.value!.acknowledged, isFalse);
+      expect(store.value!.revision, greaterThan(onRevision));
+      expect(store.value!.observedRevision, onRevision);
       source.onSync = null;
       await sync(enabled: false);
       expect(source.requests.last.payload.shouldReceive, isFalse);
-      expect(store.value!.acknowledged, isTrue);
+      expect(store.value!.observedRevision, store.value!.revision);
     },
   );
 
@@ -177,7 +179,7 @@ void main() {
       expect(store.value!.revision, 1);
       await sync(enabled: false);
       expect(source.requests.single.revision, 9);
-      expect(store.value!.acknowledged, isTrue);
+      expect(store.value!.observedRevision, store.value!.revision);
     },
   );
 
@@ -197,7 +199,7 @@ void main() {
         details: {'error': entry.$2},
       );
       await expectLater(sync(), throwsA(entry.$3));
-      expect(store.value!.acknowledged, isFalse);
+      expect(store.value!.revision, source.requests.last.revision);
     });
   }
 
@@ -215,7 +217,7 @@ void main() {
   );
 
   test(
-    'secure payload serialization preserves pending state and observed revision',
+    'secure payload serialization preserves payload and observed revision',
     () {
       final original = NotificationInstallation.create()
           .prepare(
@@ -234,17 +236,81 @@ void main() {
       expect(restored.revision, original.revision);
       expect(restored.observedRevision, 17);
       expect(restored.payload.matches(original.payload), isTrue);
-      expect(restored.acknowledged, isFalse);
-      final acknowledged = restored.recordServer(
-        17,
-        acknowledged: true,
-      );
+      expect(restored.recordServer(3).observedRevision, 17);
       expect(
-        NotificationInstallation.decode(
-          acknowledged.encode(),
-        ).acknowledged,
-        isTrue,
+        jsonDecode(restored.encode()),
+        isNot(contains('acknowledged')),
       );
+    },
+  );
+  for (final legacyAcknowledged in [true, false]) {
+    test(
+      'legacy acknowledged=$legacyAcknowledged preserves credentials and retry',
+      () async {
+        final previous = NotificationInstallation.create()
+            .prepare(
+              const NotificationPayload(
+                enabled: false,
+                permissionStatus: 'authorized',
+                token: 'token-a',
+              ),
+            )
+            .recordServer(1);
+        final legacy =
+            jsonDecode(previous.encode()) as Map<String, dynamic>;
+        legacy['acknowledged'] = legacyAcknowledged;
+        store.value = NotificationInstallation.decode(
+          jsonEncode(legacy),
+        );
+        source.onSync = (_) async => throw StateError('offline');
+        await expectLater(
+          sync(enabled: false),
+          throwsA(isA<NotificationException>()),
+        );
+        expect(await repository.enabled(), isFalse);
+        repository = NotificationRepository(source, store);
+        source.onSync = null;
+        await sync(enabled: false);
+        for (final request in source.requests) {
+          expect(request.id, previous.id);
+          expect(request.secret, previous.secret);
+          expect(request.revision, previous.revision);
+          expect(request.payload.matches(previous.payload), isTrue);
+        }
+        expect(
+          store.value!.observedRevision,
+          previous.observedRevision,
+        );
+        expect(
+          jsonDecode(store.value!.encode()),
+          isNot(contains('acknowledged')),
+        );
+      },
+    );
+  }
+
+  test(
+    'legacy payload without observed revision keeps its revision on retry',
+    () async {
+      final previous = NotificationInstallation.create().prepare(
+        const NotificationPayload(
+          enabled: true,
+          permissionStatus: 'authorized',
+          token: 'token-a',
+        ),
+      );
+      final legacy =
+          jsonDecode(previous.encode()) as Map<String, dynamic>;
+      legacy.remove('observed_revision');
+      legacy['acknowledged'] = true;
+      store.value = NotificationInstallation.decode(
+        jsonEncode(legacy),
+      );
+      expect(store.value!.observedRevision, 0);
+      await sync();
+      expect(source.requests.single.revision, previous.revision);
+      expect(store.value!.id, previous.id);
+      expect(store.value!.secret, previous.secret);
     },
   );
 }

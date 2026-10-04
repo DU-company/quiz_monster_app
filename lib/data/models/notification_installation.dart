@@ -41,7 +41,6 @@ class NotificationInstallation {
   final int revision;
   final int observedRevision;
   final NotificationPayload payload;
-  final bool acknowledged;
 
   const NotificationInstallation({
     required this.id,
@@ -49,7 +48,6 @@ class NotificationInstallation {
     required this.revision,
     this.observedRevision = 0,
     required this.payload,
-    this.acknowledged = false,
   });
 
   factory NotificationInstallation.create() {
@@ -86,17 +84,14 @@ class NotificationInstallation {
     );
   }
 
-  NotificationInstallation recordServer(
-    int value, {
-    bool acknowledged = false,
-  }) => NotificationInstallation(
-    id: id,
-    secret: secret,
-    revision: revision,
-    observedRevision: max(observedRevision, value),
-    payload: payload,
-    acknowledged: acknowledged,
-  );
+  NotificationInstallation recordServer(int value) =>
+      NotificationInstallation(
+        id: id,
+        secret: secret,
+        revision: revision,
+        observedRevision: max(observedRevision, value),
+        payload: payload,
+      );
 
   String encode() => jsonEncode({
     'installation_id': id,
@@ -104,7 +99,6 @@ class NotificationInstallation {
     'revision': revision,
     'observed_revision': observedRevision,
     'payload': payload.toJson(),
-    'acknowledged': acknowledged,
   });
 
   factory NotificationInstallation.decode(String value) {
@@ -117,7 +111,6 @@ class NotificationInstallation {
       payload: NotificationPayload.fromJson(
         json['payload'] as Map<String, dynamic>,
       ),
-      acknowledged: json['acknowledged'] as bool? ?? false,
     );
     if (!RegExp(r'^[a-f0-9]{64}$').hasMatch(result.secret) ||
         !RegExp(

@@ -1,19 +1,19 @@
 # 알림 토큰 저장소
 
-이 디렉터리는 앱의 알림 기능만 관리한다. 기존 대시보드 마이그레이션과 `.supabase-local/`의 로컬 데이터는 옮기거나 삭제하지 않는다. 현재 원격 환경에는 적용하지 않았다.
+이 디렉터리는 앱의 알림 기능만 관리한다. 기존 대시보드 마이그레이션과 `.supabase-local/`의 로컬 데이터는 옮기거나 삭제하지 않는다. 기존 알림 배포 상태는 NOTIFICATION_SETUP.md를 참고한다. 이번 예약 확장은 아직 원격에 적용하지 않았다.
 
 ## 데이터 계약
 
 `push_tokens`는 다음 6개 필드만 사용한다.
 
-| 필드 | 용도 |
-| --- | --- |
-| installation_id | 설치별 UUID 기본키 |
-| credential_hash | 설치 비밀값의 SHA-256 해시 |
-| fcm_token | 현재 FCM 주소, 없으면 null |
-| enabled | 앱 선택 ON과 OS 권한 허용을 모두 만족하는지 |
-| revision | 늦게 도착한 이전 요청을 거절하는 요청 번호 |
-| updated_at | 서버가 마지막으로 반영한 시각 |
+| 필드            | 용도                                        |
+| --------------- | ------------------------------------------- |
+| installation_id | 설치별 UUID 기본키                          |
+| credential_hash | 설치 비밀값의 SHA-256 해시                  |
+| fcm_token       | 현재 FCM 주소, 없으면 null                  |
+| enabled         | 앱 선택 ON과 OS 권한 허용을 모두 만족하는지 |
+| revision        | 늦게 도착한 이전 요청을 거절하는 요청 번호  |
+| updated_at      | 서버가 마지막으로 반영한 시각               |
 
 OS 권한과 사용자 선택은 앱이 따로 보관하고 서버에는 합쳐진 enabled를 보낸다. platform, 생성 시각, 토큰 교체 시각, 별도 무효화 시각은 저장하지 않는다. `push_token_rate_limits`는 전역·설치별 요청 제한을 여러 API 인스턴스가 공유하기 위한 보조 테이블이다.
 
@@ -85,3 +85,16 @@ deno fmt --check supabase/functions/send-notification supabase/scripts
 ```
 
 `tests/notification_delivery_integration_test.ts`는 격리 PostgREST 직접 주소 NOTIFICATION_TEST_REST_URL과 서버 키 NOTIFICATION_TEST_SERVICE_KEY를 환경변수로 받아 실제 DB와 모의 FCM을 연결한다. 외부 FCM은 호출하지 않는다. `tests/notification_schedule_test.sql`은 quiz_notifications_로 시작하는 일회용 DB에서만 실행하며 실제 cron/net 스키마가 있으면 거부한다. 상대경로 구조를 유지해 psql -f로 실행한다.
+
+## 대시보드 예약 확장 (Phase 2, 운영 미적용)
+
+`migrations/20261004010000_notification_scheduling.sql`은 기존 두 알림 SQL 이후 적용한다. 기존 4개 테이블과 설치 API를 유지하고 예약 시각·시작 여부·출처·즉시/예약 구분만 추가한다. 발송 API의 예약 요청과 워커 처리 예산은 [NOTIFICATION_SETUP.md](NOTIFICATION_SETUP.md), 데이터 보존 복구는 [rollback/notification_scheduling.md](rollback/notification_scheduling.md)를 따른다.
+
+격리 `quiz_notifications_` 접두사 DB에서 다음 순서로 검증한다. 기존 앱 DB를 초기화하지 않으며 실제 FCM을 호출하지 않는다.
+
+1. 두 기존 알림 SQL → 신규 예약 SQL 적용.
+2. `tests/notification_installations_test.sql`, `tests/notification_delivery_test.sql`, `tests/notification_scheduling_test.sql` 실행. 테스트 데이터는 rollback한다.
+3. `tests/notification_schedule_test.sql`로 비활성 크론 설치와 워커 단독 재설치가 금·토 설정을 보존하는지 확인한다. 이 테스트는 실제 cron/net 대신 격리 스텁을 사용한다.
+4. 앞의 Deno test/check/lint/fmt 명령으로 기존 전송과 예약/배치 처리 테스트를 실행한다.
+
+실제 pg_cron/pg_net 실행, Firebase 수신, 네트워크 포함 운영 처리량은 별도 배포 검증 대상이다. 예약 대기 중에는 remaining=0일 수 있으므로 state=waiting을 완료로 해석하지 않는다.

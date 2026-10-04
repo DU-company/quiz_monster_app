@@ -30,7 +30,7 @@ begin
     select net.http_post(
       url := (select decrypted_secret from vault.decrypted_secrets where name = 'notification_project_url') || '/functions/v1/send-notification',
       headers := jsonb_build_object('Content-Type','application/json','X-Notification-Key',(select decrypted_secret from vault.decrypted_secrets where name = 'notification_send_key')),
-      body := '{"action":"process"}'::jsonb,
+      body := '{"action":"process","max_batches":20}'::jsonb,
       timeout_milliseconds := 120000
     );
   $worker$) into worker_id;

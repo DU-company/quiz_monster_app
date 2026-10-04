@@ -35,7 +35,7 @@ void main() {
         permissionStatus: 'authorized',
         token: token,
       );
-      expect(store.value!.acknowledged, isTrue);
+      expect(store.value!.observedRevision, store.value!.revision);
       final first = store.value!;
       await repository.synchronize(
         enabled: true,
@@ -50,7 +50,7 @@ void main() {
         permissionStatus: 'authorized',
         token: '$token-new',
       );
-      expect(store.value!.acknowledged, isTrue);
+      expect(store.value!.observedRevision, store.value!.revision);
       expect((await source.register(store.value!)).enabled, isFalse);
       await expectLater(
         source.synchronize(first),

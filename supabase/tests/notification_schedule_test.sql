@@ -61,7 +61,7 @@ begin
   assert (select count(*)=1 from net.test_requests);
   assert (select url='http://127.0.0.1:54321/functions/v1/send-notification'
     and headers=jsonb_build_object('Content-Type','application/json','X-Notification-Key',repeat('a',64))
-    and body='{"action":"process"}'::jsonb and timeout_milliseconds=120000 from net.test_requests);
+    and body='{"action":"process","max_batches":20}'::jsonb and timeout_milliseconds=120000 from net.test_requests);
 end;
 $$;
 
@@ -92,6 +92,19 @@ begin
   assert (select schedule='3 23 * * 4,5' from cron.job where jobname='quiz-monster-weekend-push'), 'KST morning must use prior UTC weekdays';
 end;
 $$;
+-- 워커만 재설치해도 기존 금·토 작업의 활성 상태/문구/시간은 그대로다.
+update cron.job set active=true where jobname='quiz-monster-weekend-push';
+create temporary table saved_weekend_job as select * from cron.job where jobname='quiz-monster-weekend-push';
+\ir ../scripts/install-notification-worker.sql
+
+do $$
+begin
+  assert not exists(select * from saved_weekend_job except select * from cron.job), 'worker install changed weekend job';
+  assert (select count(*)=2 from cron.job), 'worker install duplicated jobs';
+  assert (select not active from cron.job where jobname='quiz-monster-push-worker'), 'worker must start disabled';
+end;
+$$;
+drop table saved_weekend_job;
 select cron.schedule('unrelated-test-job','0 0 * * *','select 1;');
 \ir ../scripts/remove-notification-schedule.sql
 
