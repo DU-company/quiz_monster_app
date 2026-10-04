@@ -123,11 +123,33 @@ export function createSendHandler(
       const { action, job_id } = body;
       if (
         typeof action !== "string" ||
-        !["enqueue", "process", "status"].includes(action) ||
+        !["enqueue", "schedule", "process", "status", "list"].includes(
+          action,
+        ) ||
         (job_id !== undefined && !validId(job_id)) ||
-        (action !== "process" && !validId(job_id))
+        ((action === "enqueue" || action === "schedule" ||
+          action === "status") && !validId(job_id))
       ) throw new InvalidRequest();
-      if (action === "enqueue") {
+      if (action === "list") {
+        const page = body.page === undefined ? 1 : body.page;
+        const pageSize = body.page_size === undefined ? 50 : body.page_size;
+        if (
+          !Number.isInteger(page) || (page as number) < 1 ||
+          (page as number) > 10000 ||
+          !Number.isInteger(pageSize) || (pageSize as number) < 1 ||
+          (pageSize as number) > 100
+        ) {
+          throw new InvalidRequest();
+        }
+        return respond(
+          200,
+          await rpc("notification_list", {
+            p_page: page,
+            p_page_size: pageSize,
+          }),
+        );
+      }
+      if (action === "enqueue" || action === "schedule") {
         const {
           title,
           body: message,
@@ -153,7 +175,8 @@ export function createSendHandler(
         const planned = scheduled_at === undefined || scheduled_at === null
           ? null
           : scheduledInstant(scheduled_at);
-        const modern = source === "dashboard" || scheduled_at !== undefined;
+        const modern = action === "schedule" || source === "dashboard" ||
+          scheduled_at !== undefined;
         const result = await rpc(
           modern ? "notification_schedule" : "notification_enqueue",
           {
