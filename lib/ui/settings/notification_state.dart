@@ -1,6 +1,15 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-enum NotificationSync { idle, pending, synced, unavailable, failed }
+enum NotificationSync {
+  idle,
+  pending,
+  synced,
+  unavailable,
+  failed,
+  authFailed,
+  conflict,
+  tokenConflict,
+}
 
 class NotificationState {
   final bool ready;
@@ -27,6 +36,15 @@ class NotificationState {
 
   String get description {
     if (!ready) return busy ? '알림 설정을 확인하고 있어요.' : '알림 기능을 준비하고 있어요.';
+    if (sync == NotificationSync.authFailed) {
+      return '알림 등록 정보를 확인하지 못했어요. 개발자에게 문의해 주세요.';
+    }
+    if (sync == NotificationSync.conflict) {
+      return '다른 알림 설정이 먼저 반영됐어요. 알림을 다시 선택해 주세요.';
+    }
+    if (sync == NotificationSync.tokenConflict) {
+      return '알림 등록을 완료하지 못했어요. 다시 등록해 주세요.';
+    }
     if (busy) return '알림 설정을 저장하고 있어요.';
     if (sync == NotificationSync.failed) {
       return '설정을 반영하지 못했어요. 다시 시도해 주세요.';

@@ -18,6 +18,7 @@ abstract class NotificationService {
   Future<AuthorizationStatus> permission();
   Future<AuthorizationStatus> requestPermission();
   Future<String?> token();
+  Future<String?> renewToken();
   Stream<String> get tokens;
   Stream<RemoteMessage> get messages;
   Stream<RemoteMessage> get openedMessages;
@@ -96,6 +97,12 @@ class FirebaseNotificationService implements NotificationService {
     }
     if (_disposed) return null;
     return client.getToken().timeout(_timeout);
+  }
+
+  @override
+  Future<String?> renewToken() async {
+    await _client.deleteToken().timeout(_timeout);
+    return token();
   }
 
   @override

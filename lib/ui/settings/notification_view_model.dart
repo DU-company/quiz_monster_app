@@ -40,6 +40,14 @@ class NotificationViewModel extends Notifier<NotificationState> {
       _enqueue(() => _refresh(requestAtStart: true));
   Future<void> refresh() => _enqueue(() => _refresh());
 
+  // 다른 설치와 토큰이 겹치면 사용자가 요청한 경우에만 FCM 주소를 새로 발급한다.
+  Future<void> renewToken() => _enqueue(() async {
+    if (!state.ready || !state.permitted) return;
+    state = state.copyWith(busy: true);
+    _token = await _service.renewToken();
+    await _synchronize();
+  });
+
   // 서버 작업을 순서대로 실행하고 실패가 다음 작업을 막지 않게 한다.
   Future<void> _enqueue(Future<void> Function() action) {
     _queue = _queue.then((_) async {
@@ -198,11 +206,36 @@ class NotificationViewModel extends Notifier<NotificationState> {
           return;
         }
       }
-      await _repository.synchronize(enabled: enabled, token: _token);
+      await _repository.synchronize(
+        enabled: state.enabled,
+        permissionStatus: state.permission.name,
+        token: _token,
+      );
       if (ref.mounted && revision == _revision) {
         state = state.copyWith(
           busy: false,
           sync: NotificationSync.synced,
+        );
+      }
+    } on NotificationAuthException {
+      if (ref.mounted && revision == _revision) {
+        state = state.copyWith(
+          busy: false,
+          sync: NotificationSync.authFailed,
+        );
+      }
+    } on NotificationTokenConflictException {
+      if (ref.mounted && revision == _revision) {
+        state = state.copyWith(
+          busy: false,
+          sync: NotificationSync.tokenConflict,
+        );
+      }
+    } on NotificationConflictException {
+      if (ref.mounted && revision == _revision) {
+        state = state.copyWith(
+          busy: false,
+          sync: NotificationSync.conflict,
         );
       }
     } on NotificationSetupException {

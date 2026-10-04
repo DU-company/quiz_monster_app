@@ -63,6 +63,14 @@ class SettingsScreen extends ConsumerWidget {
                   .refresh(),
               child: const Text('알림 설정 다시 확인'),
             ),
+          if (!notifications.busy &&
+              notifications.sync == NotificationSync.tokenConflict)
+            TextButton(
+              onPressed: () => ref
+                  .read(notificationViewModelProvider.notifier)
+                  .renewToken(),
+              child: const Text('알림 등록 다시 시도'),
+            ),
           ListTile(
             title: Text('앱 버전', style: theme.typo.subtitle1),
             subtitle: version.when(

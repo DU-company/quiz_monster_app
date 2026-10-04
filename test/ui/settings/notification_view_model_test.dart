@@ -7,6 +7,9 @@ import 'package:quiz_monster/ui/settings/notification_listener.dart'
     as app;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiz_monster/core/service/notification_service.dart';
+import 'package:quiz_monster/core/service/notification_installation_store.dart';
+import 'package:quiz_monster/data/entities/notification_sync_entity.dart';
+import 'package:quiz_monster/data/models/notification_installation.dart';
 import 'package:quiz_monster/data/data_sources/notification_data_source.dart';
 import 'package:quiz_monster/ui/settings/notification_state.dart';
 import 'package:quiz_monster/ui/settings/notification_view_model.dart';
@@ -45,6 +48,9 @@ class FakeService implements NotificationService {
   @override
   Stream<String> get tokens => tokenEvents.stream;
   @override
+  Future<String?> renewToken() async =>
+      currentToken = 'renewed-token';
+  @override
   Stream<RemoteMessage> get messages => messageEvents.stream;
   @override
   Stream<RemoteMessage> get openedMessages => openedEvents.stream;
@@ -58,19 +64,51 @@ class FakeService implements NotificationService {
   }
 }
 
+class MemoryInstallationStore
+    implements NotificationInstallationStore {
+  NotificationInstallation? value;
+
+  @override
+  Future<NotificationInstallation?> read() async => value;
+
+  @override
+  Future<void> write(NotificationInstallation installation) async {
+    value = installation;
+  }
+}
+
 class FakeDataSource implements NotificationDataSource {
   final calls = <({bool enabled, String? token})>[];
+  final payloads = <NotificationInstallation>[];
   bool fail = false;
   Completer<void>? response;
 
   @override
-  Future<void> synchronize({
-    required bool enabled,
-    String? token,
-  }) async {
-    calls.add((enabled: enabled, token: token));
+  Future<NotificationSyncEntity> register(
+    NotificationInstallation installation,
+  ) async =>
+      const NotificationSyncEntity(revision: 0, enabled: false);
+
+  @override
+  Future<NotificationSyncEntity> synchronize(
+    NotificationInstallation installation,
+  ) async {
+    final payload = installation.payload;
+    final active =
+        payload.enabled &&
+        [
+          'authorized',
+          'provisional',
+        ].contains(payload.permissionStatus) &&
+        payload.token != null;
+    calls.add((enabled: active, token: payload.token));
+    payloads.add(installation);
     if (fail) throw StateError('Server unavailable');
     if (response != null) await response!.future;
+    return NotificationSyncEntity(
+      revision: installation.revision,
+      enabled: active,
+    );
   }
 }
 
@@ -78,6 +116,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late FakeService service;
   late FakeDataSource source;
+  late MemoryInstallationStore installationStore;
   late ProviderContainer container;
   late NotificationViewModel model;
 
@@ -85,6 +124,9 @@ void main() {
     overrides: [
       notificationServiceProvider.overrideWithValue(service),
       notificationDataSourceProvider.overrideWithValue(source),
+      notificationInstallationStoreProvider.overrideWithValue(
+        installationStore,
+      ),
     ],
   );
 
@@ -92,6 +134,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     service = FakeService();
     source = FakeDataSource();
+    installationStore = MemoryInstallationStore();
     container = newContainer();
     model = container.read(notificationViewModelProvider.notifier);
   });
@@ -281,6 +324,7 @@ void main() {
       source.response!.complete();
       await Future.wait([enabling, disabling]);
       expect(source.calls.last.enabled, isFalse);
+      expect(source.payloads.last.payload.enabled, isFalse);
       expect(
         container.read(notificationViewModelProvider).switchValue,
         isFalse,
@@ -342,6 +386,8 @@ void main() {
       service.status = AuthorizationStatus.denied;
       await model.refresh();
       expect(source.calls.last.enabled, isFalse);
+      expect(source.payloads.last.payload.enabled, isTrue);
+      expect(source.payloads.last.payload.permissionStatus, 'denied');
       expect(
         container.read(notificationViewModelProvider).switchValue,
         isFalse,
