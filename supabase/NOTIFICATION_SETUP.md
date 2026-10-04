@@ -43,11 +43,11 @@ supabase secrets set --project-ref PROJECT_REF --env-file /안전한/notificatio
 2. 확인된 원격 DB에 동일 migration을 적용한다. 이 앱의 supabase 폴더에는 전체 퀴즈 baseline이 없으므로 대상 이력 확인 없이 `db push`를 실행하지 않는다.
 3. 서버 secrets를 등록하고 `notification-installations`, `send-notification`을 배포한다. 두 함수는 각각 설치 비밀값/발송 전용 키로 인증하고 verify_jwt=false다.
 4. 확인된 테스트 설치에만 수동 발송한다. 앱 사용자가 OS 권한을 허용해야 활성 토큰이 등록된다.
-5. 성공 후 worker와 정기 enqueue 스케줄을 활성화한다. 롤백 시 먼저 스케줄을 제거하고 발송 migration을 되돌린 뒤 필요하면 설치 migration을 되돌린다.
+5. 대기 큐와 영향을 확인한 후 worker를 활성화한다. 금·토 enqueue는 문구 확정 후 별도로 활성화한다. 복구는 우선 신규 등록·worker를 중지하고 큐를 보존하며, `rollback/notification_scheduling.md`를 따른다. 예약 데이터가 남아 있는 상태에서 구버전 claim을 재개하지 않는다.
 
 ## 수동 실행 API
 
-POST `/functions/v1/send-notification` + `X-Notification-Key` 헤더로 호출한다. Supabase anon key나 앱 설치 비밀값은 발송 권한이 아니다. API는 웹 브라우저 직접 호출용이 아니며 관리자 웹 UI는 만들지 않았다. 향후 대시보드 서버에서도 같은 API를 호출할 수 있다.
+POST `/functions/v1/send-notification` + `X-Notification-Key` 헤더로 호출한다. Supabase anon key나 앱 설치 비밀값은 발송 권한이 아니다. API는 웹 브라우저 직접 호출용이 아니다. 관리자 웹의 서버 전용 API가 같은 키로 호출하며 `/notifications`에서 즉시·일회성 예약을 등록한다.
 
 요청 JSON 파일의 예시(설치 ID와 작업 ID는 실제 테스트 값으로 교체):
 
@@ -111,13 +111,13 @@ Quiz_Monster 원격 DB에 두 알림 migration과 이력을 적용하고 함수 
 
 사용자의 명시적 승인 후 2026-10-04 서버 secrets 등록을 완료했다. 인증된 API의 대상 없는 요청이 HTTP 200으로 정상 응답했다. 실제 기기 발송과 정기 스케줄 활성화는 아직 미실행이다.
 
-## 대시보드 일회성 예약 (로컬 구현, 운영 적용 전)
+## 대시보드 일회성 예약
 
 기존 enqueue 계약과 금·토 등록 SQL은 그대로 유지한다. 새로운 대시보드 요청에는 `source: "dashboard"`를 보낸다. `scheduled_at`을 생략하거나 null로 보내면 즉시 작업이며, 시간대를 포함한 ISO 시각을 보내면 일회성 예약이다. 제목·본문 제한은 기존과 같다.
 
 ```json
 {
-  "action": "enqueue",
+  "action": "schedule",
   "source": "dashboard",
   "job_id": "11111111-1111-4111-8111-111111111111",
   "title": "공휴일 퀴즈",
@@ -138,3 +138,93 @@ Quiz_Monster 원격 DB에 두 알림 migration과 이력을 적용하고 함수 
 배포는 `20261004010000_notification_scheduling.sql` → 새 send-notification 함수 → 워커 설정 순서다. 운영 DB에 적용하기 전 알림 테이블 정의/행을 비공개 경로에 백업한다. 기존 데이터의 started_at은 created_at으로 채워 이미 생성된 수신자를 다시 만들지 않는다. 이 단계에서 운영 DB와 크론을 자동 변경하지 않는다.
 
 복구 시 신규 등록과 워커를 먼저 중지하고 큐를 보존한다. 새 예약이 남은 상태에서 예전 claim으로 워커를 재개하면 예약 시각을 무시할 수 있으므로 허용하지 않는다. 상세 복구 절차는 `rollback/notification_scheduling.md`를 따른다. 이미 FCM에 전달한 알림은 취소할 수 없다.
+
+## 웹 관리자 API용 목록과 전용 등록 액션
+
+웹 서버는 `action: "schedule"`로 등록한다. 내용·대상·scheduled_at 계약은 위
+enqueue 확장과 같지만, 예약 필드를 모르는 구버전 Edge가 즉시 발송으로 오해하지
+않도록 새 액션을 사용한다. 즉시 발송도 이 액션에 null 시각을 보낸다. 기존
+enqueue 호출은 호환성을 유지한다.
+
+`action: "list"`, 선택적 `page`(1~10,000), `page_size`(1~100, 기본50)는
+dashboard 작업만 `{jobs,total,page,page_size}`로 반환한다. 목록과 status는
+Firebase 설정 없이 조회 가능하지만 발송 API 키 인증은 항상 필요하다. 조회는 작업
+시작/대상 생성/발송을 실행하지 않는다.
+
+예약 SQL 이후 `migrations/20261004020000_notification_listing.sql`을 적용하고 새
+Edge를 배포한 다음 웹을 연결한다. 목록 RPC도 service_role만 실행 가능하며 웹에는
+service-role 키를 배포하지 않는다. 이 액션들은 현재 관리자 웹 서버에서 사용하며
+기존 수동 CLI의 지원 액션은 enqueue/process/status다.
+
+## Phase 5 운영 연결 — 2026-10-04
+
+- 대상: `ecgixrbdqlkshkpnelsa`. 예약·목록 SQL 두 개를 각 트랜잭션과 migration
+  이력으로 적용하고 `send-notification` 새 버전을 배포했다. 설치 등록 함수는
+  변경하지 않았다.
+- 기존 로컬 발송 키와 운영 secret의 SHA-256이 일치하는지 확인한 후 웹
+  `.env.local`의 서버 전용 `NOTIFICATION_SEND_KEY`에 연결했다. 키를 재발급하지
+  않았고 Firebase 계정·service-role 키를 웹에 넣지 않았다. Vercel은 아직
+  배포하지 않았으므로 배포 시 같은 서버 전용 키가 별도로 필요하다.
+- `pg_cron`·`pg_net` 활성화, Vault의
+  `notification_project_url`·`notification_send_key` 연결,
+  `install-notification-worker.sql` 설치를 완료했다. 사용자가 운영 워커 활성화를
+  명시적으로 승인한 후 대기 작업 없음까지 재확인하여 매분 worker를 켰다. 금·토
+  등록 작업은 설치·활성화하지 않았다. 해당 시각·문구의 기존 결정은 유지한다.
+- 사전 백업: Git 제외 `.supabase-local/notification-phase5-20261004/`의
+  `before.json`(행·컬럼·제약·인덱스·RLS/권한·함수·이력), 이전 SQL 두 개,
+  `edge-before/`의 운영 함수 원본. 디렉터리는 0700, 민감 파일은 0600이며 키·토큰
+  원문은 출력하지 않았다. 이 경로의 파일은 Git에 추가하지 않는다.
+- 인증된 Edge 목록 조회 HTTP 200과 존재하지 않는 작업 ID를 지정한 process의
+  `claimed=0` 응답을 확인했다. cron의 실행 성공만으로 FCM 성공을 판단하지 않고
+  pg_net HTTP 결과도 확인한다.
+- 실제 기기 테스트는 확인된 설치 UUID로만 진행한다. 수신자 없는 서버 검증과 FCM
+  접수·실기기 수신은 별도로 보고한다. 새 전체 대상 테스트 발송은 하지 않는다.
+
+### 점검·중지
+
+```sql
+select jobname, schedule, active from cron.job
+where jobname = 'quiz-monster-push-worker';
+select status, start_time, end_time from cron.job_run_details
+where jobid = (select jobid from cron.job where jobname = 'quiz-monster-push-worker')
+order by runid desc limit 5;
+select status_code, timed_out, error_msg, created from net._http_response
+order by id desc limit 5;
+-- 중지할 때만 실행한다. 큐·키·예약은 보존한다.
+select cron.alter_job(jobid, active := false) from cron.job
+where jobname = 'quiz-monster-push-worker';
+```
+
+새 예약 접수도 막으려면 웹 서버의 발송 키를 제거하고 재시작/재배포한다. 다른
+직접 Edge 등록 경로가 있다면 해당 운영 경로도 중지한다. 재개 전
+pending/retry/sending 및 미시작 예약을 확인한다. 이미 FCM에 전달된 메시지는
+취소할 수 없다.
+
+### 회귀 검증
+
+Deno 함수·도구 테스트 77개, SQL 6종, 두 worker 동시 처리, 격리 PostgREST+모의
+FCM 통합 2개를 통과했다. 신규 `notification_scheduling_integration_test.ts`는
+기존 정기+예약 동시 도래, OFF/토큰 교체, 부분 재시도와 24시간 초과 중단을
+검증한다. `NOTIFICATION_TEST_REST_URL`은 loopback만 허용하고
+`NOTIFICATION_TEST_DB_NAME`은 폐기 가능한 `quiz_notifications_*` DB여야 한다.
+Docker DB/권한/PostgREST 준비 후 다음처럼 실행하며 운영 DB나 실제 FCM은 사용하지
+않는다.
+
+```sh
+deno test --allow-env --allow-net=127.0.0.1 --allow-run=docker supabase/tests/notification_scheduling_integration_test.ts
+```
+
+앱 알림 테스트 29개 통과, 로컬 API 설정을 요구하는 1개는 건너뛰었다. 관련 파일
+format/analyze는 통과했으며 전체 analyzer의 기존 106개 진단(오래된 widget_test의
+MyApp 참조 포함), 미변경 설치 handler_test의 require-await lint 5건은 별도 기존
+문제로 남겨 두었다.
+
+수신자 없는 운영 검증 2건: 즉시 15:28:26→15:29:02 KST, 예약 15:30:31→15:31:00 KST에 서버 cron으로 완료됐다. 예정 전 waiting도 확인했고 실제 수신자·FCM 전송은 0건이다. 작업 내역은 보존했다. 실기기 즉시·예약 수신은 테스트 기기 확인 및 발송 승인 대기다.
+
+## iOS 잠금 화면 알림음 수정 — 2026-10-04
+
+FCM 발송 payload에 iOS 기본 알림음이 빠져 있어 `apns.payload.aps.sound="default"`를 추가했다. APNs alert와 일반 `active` interruption level, push-type=alert/priority=10을 명시했다. Android 설정과 앱 전경 SnackBar 동작은 유지한다. 무음·집중 모드를 무시하는 critical/time-sensitive 알림은 사용하지 않는다. 앱 재설치 없이 새 서버 발송부터 적용된다.
+
+send-notification 테스트 60개, 타입·lint·포맷 검사를 통과한 뒤 운영 함수에 배포했다. 이전 함수는 Git 제외 `.supabase-local/notification-ios-sound-20261004/`에 보관했다. 실제 기기 소리·진동·화면 켜짐은 사용자 재검증이 필요하며 이번 수정 검증에서 실제 테스트 알림을 보내지는 않았다. iOS 설정의 앱 소리·잠금 화면 표시, 무음·집중 모드 및 햅틱 설정도 영향을 준다.
+
+참고: [Apple 원격 알림 payload](https://developer.apple.com/documentation/usernotifications/generating-a-remote-notification), [iPhone 알림 설정](https://support.apple.com/en-gb/guide/iphone/iph7c3d96bab/ios).
