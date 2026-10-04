@@ -139,7 +139,25 @@ export function createFcmSender(
             authorization: `Bearer ${access}`,
             "content-type": "application/json",
           },
-          body: JSON.stringify({ message: { token, notification } }),
+          body: JSON.stringify({
+            message: {
+              token,
+              notification,
+              apns: {
+                headers: {
+                  "apns-push-type": "alert",
+                  "apns-priority": "10",
+                },
+                payload: {
+                  aps: {
+                    alert: notification,
+                    sound: "default",
+                    "interruption-level": "active",
+                  },
+                },
+              },
+            },
+          }),
         },
       );
       if (response.ok) {

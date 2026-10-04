@@ -80,6 +80,24 @@ Deno.test("OAuth JWT uses verified RS256 signature, fixed audience/scope and sen
         payload.message.token === "device" &&
           payload.message.notification.body === notification.body,
       );
+      const apns = payload.message.apns;
+      assert(apns.headers["apns-push-type"] === "alert");
+      assert(apns.headers["apns-priority"] === "10");
+      assert(apns.payload.aps.alert.title === notification.title);
+      assert(apns.payload.aps.alert.body === notification.body);
+      assert(
+        apns.payload.aps.sound === "default",
+        "iOS alerts request default sound",
+      );
+      assert(
+        apns.payload.aps["interruption-level"] === "active",
+        "normal alerts respect Focus and sound settings",
+      );
+      assert(
+        !("content-available" in apns.payload.aps),
+        "not a background-only push",
+      );
+      assert(!("android" in payload.message), "Android defaults unchanged");
       return Response.json({ name: "projects/test/messages/1" });
     }),
     () => 1700000000000,
