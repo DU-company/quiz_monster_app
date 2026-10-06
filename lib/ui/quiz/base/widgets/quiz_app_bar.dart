@@ -85,7 +85,7 @@ class QuizAppBar extends ConsumerWidget {
         IconButton(
           tooltip: '환경설정',
           onPressed: onSettingsPressed,
-          icon: const Icon(Icons.settings_outlined),
+          icon: const Icon(CupertinoIcons.gear),
         ),
       ],
     );

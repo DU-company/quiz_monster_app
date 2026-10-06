@@ -1,5 +1,6 @@
 import 'package:quiz_monster/ui/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
@@ -23,7 +24,8 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/quiz',
         name: QuizScreen.routeName,
-        pageBuilder: (_, _) => _slidePage(child: QuizScreen()),
+        pageBuilder: (context, state) =>
+            buildSlidePage(context, state, child: QuizScreen()),
       ),
       GoRoute(
         path: '/wishlist',
@@ -31,7 +33,9 @@ final goRouterProvider = Provider((ref) {
         pageBuilder: (context, state) {
           final items = state.extra;
           if (items is! List<QuizModel>) {
-            return _slidePage(
+            return buildSlidePage(
+              context,
+              state,
               child: DefaultLayout(
                 child: ErrorMessageWidget(
                   message: '찜 목록을 불러올 수 없습니다.\n퀴즈 목록에서 다시 열어 주세요.',
@@ -41,47 +45,60 @@ final goRouterProvider = Provider((ref) {
               ),
             );
           }
-          return _slidePage(child: WishlistScreen(items));
+          return buildSlidePage(
+            context,
+            state,
+            child: WishlistScreen(items),
+          );
         },
       ),
       GoRoute(
         path: '/test',
         name: TestScreen.routeName,
-        pageBuilder: (_, _) => _slidePage(child: TestScreen()),
+        pageBuilder: (context, state) =>
+            buildSlidePage(context, state, child: TestScreen()),
       ),
 
       GoRoute(
         path: '/settings',
         name: SettingsScreen.routeName,
-        pageBuilder: (_, _) =>
-            _slidePage(child: const SettingsScreen()),
+        pageBuilder: (context, state) => buildSlidePage(
+          context,
+          state,
+          child: const SettingsScreen(),
+        ),
       ),
 
       /// Quiz settings
       GoRoute(
         path: '/pass',
         name: SetPassScreen.routeName,
-        pageBuilder: (_, _) => _slidePage(child: SetPassScreen()),
+        pageBuilder: (context, state) =>
+            buildSlidePage(context, state, child: SetPassScreen()),
       ),
       GoRoute(
         path: '/level',
         name: SetLevelScreen.routeName,
-        pageBuilder: (_, _) => _slidePage(child: SetLevelScreen()),
+        pageBuilder: (context, state) =>
+            buildSlidePage(context, state, child: SetLevelScreen()),
       ),
       GoRoute(
         path: '/time',
         name: SetTimeScreen.routeName,
-        pageBuilder: (_, _) => _slidePage(child: SetTimeScreen()),
+        pageBuilder: (context, state) =>
+            buildSlidePage(context, state, child: SetTimeScreen()),
       ),
       GoRoute(
         path: '/player',
         name: PlayerScreen.routeName,
-        pageBuilder: (_, _) => _slidePage(child: PlayerScreen()),
+        pageBuilder: (context, state) =>
+            buildSlidePage(context, state, child: PlayerScreen()),
       ),
       GoRoute(
         path: '/time-count',
         name: TimeCountScreen.routeName,
-        builder: (_, _) => TimeCountScreen(),
+        pageBuilder: (context, state) =>
+            buildSlidePage(context, state, child: TimeCountScreen()),
       ),
 
       /// Quiz
@@ -91,7 +108,9 @@ final goRouterProvider = Provider((ref) {
         pageBuilder: (context, state) {
           final qid = int.tryParse(state.pathParameters['qid'] ?? '');
           if (qid == null || qid <= 0) {
-            return _slidePage(
+            return buildSlidePage(
+              context,
+              state,
               child: DefaultLayout(
                 child: ErrorMessageWidget(
                   message: '퀴즈 주소를 확인할 수 없습니다.\n목록에서 다시 선택해 주세요.',
@@ -101,37 +120,51 @@ final goRouterProvider = Provider((ref) {
               ),
             );
           }
-          return _slidePage(child: QuizDetailScreen(qid));
+          return buildSlidePage(
+            context,
+            state,
+            child: QuizDetailScreen(qid),
+          );
         },
       ),
       GoRoute(
         path: '/result',
         name: ResultScreen.routeName,
-        pageBuilder: (_, _) => _slidePage(child: ResultScreen()),
+        pageBuilder: (context, state) =>
+            buildSlidePage(context, state, child: ResultScreen()),
       ),
     ],
   );
 });
 
-CustomTransitionPage<T> _slidePage<T>({
+Page<T> buildSlidePage<T>(
+  BuildContext context,
+  GoRouterState state, {
   required Widget child,
-  Duration duration = const Duration(milliseconds: 250),
 }) {
-  return CustomTransitionPage<T>(
-    transitionDuration: duration,
-    reverseTransitionDuration: duration,
-    child: child,
-    transitionsBuilder:
-        (context, animation, secondaryAnimation, child) {
-          final tween = Tween<Offset>(
-            begin: const Offset(1.0, 0.0),
-            end: Offset.zero,
-          ).chain(CurveTween(curve: Curves.easeOutCubic));
+  if (Theme.of(context).platform == TargetPlatform.iOS) {
+    return CupertinoPage<T>(
+      key: state.pageKey,
+      name: state.name,
+      child: child,
+    );
+  }
 
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
+  // Android는 같은 슬라이드만 적용하고 iOS 가장자리 제스처는 추가하지 않는다.
+  return CustomTransitionPage<T>(
+    key: state.pageKey,
+    name: state.name,
+    transitionDuration:
+        CupertinoRouteTransitionMixin.kTransitionDuration,
+    reverseTransitionDuration:
+        CupertinoRouteTransitionMixin.kTransitionDuration,
+    child: child,
+    transitionsBuilder: (_, animation, secondaryAnimation, child) =>
+        CupertinoPageTransition(
+          primaryRouteAnimation: animation,
+          secondaryRouteAnimation: secondaryAnimation,
+          linearTransition: false,
+          child: child,
+        ),
   );
 }
