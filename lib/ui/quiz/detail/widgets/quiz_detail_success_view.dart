@@ -13,8 +13,8 @@ import 'package:quiz_monster/ui/quiz/no_pass/no_pass_quiz_screen.dart';
 import 'package:quiz_monster/ui/quiz/pass/pass_quiz_screen.dart';
 import 'package:quiz_monster/ui/quiz/detail/view_model/detail_timer_view_model.dart';
 import 'package:quiz_monster/ui/quiz/detail/widgets/detail_app_bar.dart';
-import 'package:quiz_monster/ui/settings/level/level_provider.dart';
-import 'package:quiz_monster/ui/settings/time/set_time_view_model.dart';
+import 'package:quiz_monster/ui/quiz_settings/level/level_provider.dart';
+import 'package:quiz_monster/ui/quiz_settings/time/set_time_view_model.dart';
 
 final showAnswerProvider = StateProvider.autoDispose<bool>(
   (ref) => false,

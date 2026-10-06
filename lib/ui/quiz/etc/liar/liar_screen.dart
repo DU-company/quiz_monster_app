@@ -10,7 +10,7 @@ import 'package:quiz_monster/ui/quiz/etc/liar/widgets/liar_app_bar.dart';
 import 'package:quiz_monster/ui/quiz/etc/liar/widgets/liar_body.dart';
 import 'package:quiz_monster/ui/quiz/etc/liar/widgets/liar_footer.dart';
 import 'package:quiz_monster/ui/quiz/etc/liar/widgets/show_answer_dialog.dart';
-import 'package:quiz_monster/ui/settings/player/set_player_view_model.dart';
+import 'package:quiz_monster/ui/quiz_settings/player/set_player_view_model.dart';
 import 'package:quiz_monster/core/provider/page_controller_provider.dart';
 import 'package:quiz_monster/ui/quiz/detail/widgets/quiz_detail_success_view.dart';
 

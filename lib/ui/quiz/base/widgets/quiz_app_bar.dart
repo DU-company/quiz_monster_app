@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:quiz_monster/core/const/data.dart';
 import 'package:quiz_monster/core/theme/color/app_color.dart';
 import 'package:quiz_monster/core/theme/responsive/layout.dart';
 import 'package:quiz_monster/core/theme/theme_provider.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
-import 'package:quiz_monster/test/test_screen.dart';
+import 'package:quiz_monster/ui/settings/settings_screen.dart';
 import 'package:quiz_monster/ui/wishlist/wishlist_screen.dart';
 
 class QuizAppBar extends ConsumerWidget {
@@ -28,9 +27,8 @@ class QuizAppBar extends ConsumerWidget {
               /// Top
               renderTop(
                 color: theme.color,
-                // onMenuPressed: () {},
-                // onMenuPressed: () =>
-                //     context.pushNamed(TestScreen.routeName),
+                onSettingsPressed: () =>
+                    context.pushNamed(SettingsScreen.routeName),
                 onLikePressed: () => context.pushNamed(
                   WishlistScreen.routeName,
                   extra: items,
@@ -66,7 +64,7 @@ class QuizAppBar extends ConsumerWidget {
 
   Widget renderTop({
     required AppColor color,
-    // required VoidCallback onMenuPressed,
+    required VoidCallback onSettingsPressed,
     required VoidCallback onLikePressed,
   }) {
     return Row(
@@ -84,7 +82,11 @@ class QuizAppBar extends ConsumerWidget {
           onPressed: onLikePressed,
           icon: Icon(CupertinoIcons.suit_heart),
         ),
-        // IconButton(onPressed: onMenuPressed, icon: Icon(Icons.menu)),
+        IconButton(
+          tooltip: '환경설정',
+          onPressed: onSettingsPressed,
+          icon: const Icon(CupertinoIcons.gear),
+        ),
       ],
     );
   }

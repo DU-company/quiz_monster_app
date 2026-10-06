@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quiz_monster/ui/quiz/etc/fly/fly_state.dart';
-import 'package:quiz_monster/ui/settings/level/level_provider.dart';
+import 'package:quiz_monster/ui/quiz_settings/level/level_provider.dart';
 
 final flyViewModelProvider = NotifierProvider(() => FlyViewModel());
 

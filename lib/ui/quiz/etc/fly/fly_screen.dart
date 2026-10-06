@@ -10,7 +10,7 @@ import 'package:quiz_monster/core/theme/responsive/layout.dart';
 import 'package:quiz_monster/ui/quiz/detail/widgets/quiz_detail_success_view.dart';
 import 'package:quiz_monster/ui/common/layout/quiz_detail_layout.dart';
 import 'package:quiz_monster/ui/quiz/etc/fly/fly_view_model.dart';
-import 'package:quiz_monster/ui/settings/level/level_provider.dart';
+import 'package:quiz_monster/ui/quiz_settings/level/level_provider.dart';
 
 class FlyScreen extends ConsumerStatefulWidget {
   final VoidCallback showAnswerPressed;
