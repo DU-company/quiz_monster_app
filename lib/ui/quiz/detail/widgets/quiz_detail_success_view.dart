@@ -13,6 +13,7 @@ import 'package:quiz_monster/ui/quiz/no_pass/no_pass_quiz_screen.dart';
 import 'package:quiz_monster/ui/quiz/pass/pass_quiz_screen.dart';
 import 'package:quiz_monster/ui/quiz/detail/view_model/detail_timer_view_model.dart';
 import 'package:quiz_monster/ui/quiz/detail/widgets/detail_app_bar.dart';
+import 'package:quiz_monster/ui/quiz/detail/widgets/exit_dialog.dart';
 import 'package:quiz_monster/ui/quiz_settings/level/level_provider.dart';
 import 'package:quiz_monster/ui/quiz_settings/time/set_time_view_model.dart';
 
@@ -69,44 +70,52 @@ class _QuizScreenState extends ConsumerState<QuizDetailSuccessView>
       playSound();
     }
 
-    return Column(
-      children: [
-        DetailAppBar(
-          itemLength: widget.items.length,
-          currentIndex: currentIndex,
-          animationController: animationController,
-          remainingSeconds: remainingSeconds,
-          onTapConfirm: onTapConfirm,
-        ),
-
-        /// Pass
-        if (widget.quiz.type == QuizType.pass)
-          PassQuizScreen(
-            items: widget.items,
-            pageController: pageController,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && (ModalRoute.of(context)?.isCurrent ?? false)) {
+          onBackPressed();
+        }
+      },
+      child: Column(
+        children: [
+          DetailAppBar(
+            itemLength: widget.items.length,
+            currentIndex: currentIndex,
+            animationController: animationController,
             remainingSeconds: remainingSeconds,
+            onBackPressed: onBackPressed,
           ),
 
-        /// NoPass
-        if (widget.quiz.type == QuizType.image ||
-            widget.quiz.type == QuizType.question)
-          NoPassQuizScreen(
-            items: widget.items,
-            remainingSeconds: remainingSeconds,
-            pageController: pageController,
-            onNextPressed: onNextPressed,
-            onPrevPressed: onPrevPressed,
-            showAnswerPressed: showAnswerPressed,
-          ),
+          /// Pass
+          if (widget.quiz.type == QuizType.pass)
+            PassQuizScreen(
+              items: widget.items,
+              pageController: pageController,
+              remainingSeconds: remainingSeconds,
+            ),
 
-        /// ETC
-        if (widget.quiz.type == QuizType.fly)
-          FlyScreen(
-            showAnswerPressed: showAnswerPressed,
-            onReplay: onReplay,
-            remainingSeconds: remainingSeconds,
-          ),
-      ],
+          /// NoPass
+          if (widget.quiz.type == QuizType.image ||
+              widget.quiz.type == QuizType.question)
+            NoPassQuizScreen(
+              items: widget.items,
+              remainingSeconds: remainingSeconds,
+              pageController: pageController,
+              onNextPressed: onNextPressed,
+              onPrevPressed: onPrevPressed,
+              showAnswerPressed: showAnswerPressed,
+            ),
+
+          /// ETC
+          if (widget.quiz.type == QuizType.fly)
+            FlyScreen(
+              showAnswerPressed: showAnswerPressed,
+              onReplay: onReplay,
+              remainingSeconds: remainingSeconds,
+            ),
+        ],
+      ),
     );
   }
 
@@ -153,6 +162,13 @@ class _QuizScreenState extends ConsumerState<QuizDetailSuccessView>
   void showAnswerPressed() {
     allStop();
     ref.read(showAnswerProvider.notifier).state = true;
+  }
+
+  void onBackPressed() {
+    showDialog(
+      context: context,
+      builder: (_) => ExitDialog(onTapConfirm: onTapConfirm),
+    );
   }
 
   // pop

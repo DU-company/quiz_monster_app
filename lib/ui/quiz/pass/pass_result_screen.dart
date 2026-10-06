@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/core/theme/theme_provider.dart';
 import 'package:quiz_monster/ui/common/widgets/primary_button.dart';
+import 'package:quiz_monster/ui/common/widgets/dialog/base_confirm_dialog.dart';
 import 'package:quiz_monster/ui/common/layout/default_layout.dart';
 import 'package:quiz_monster/core/theme/responsive/layout.dart';
 import 'package:quiz_monster/ui/quiz/base/quiz_screen.dart';
@@ -17,35 +18,58 @@ class ResultScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(passViewModelProvider);
 
-    return DefaultLayout(
-      needWillPopScope: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              physics: BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _Top(
-                    correctCount: state.correctWords.length,
-                    itemCount: state.itemCount,
-                  ),
-                  Divider(),
-                  _Body(
-                    passedWords: state.passedWords,
-                    correctWords: state.correctWords,
-                  ),
-                ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && (ModalRoute.of(context)?.isCurrent ?? false)) {
+          showHomeDialog(context, ref);
+        }
+      },
+      child: DefaultLayout(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _Top(
+                      correctCount: state.correctWords.length,
+                      itemCount: state.itemCount,
+                    ),
+                    Divider(),
+                    _Body(
+                      passedWords: state.passedWords,
+                      correctWords: state.correctWords,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          PrimaryButton(
-            label: 'Home',
-            onPressed: () => onPressed(context, ref),
-          ),
-        ],
+            PrimaryButton(
+              label: 'Home',
+              onPressed: () => onPressed(context, ref),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void showHomeDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => BaseConfirmDialog(
+        title: '홈으로',
+        content: '퀴즈 결과를 닫고 홈으로 이동할까요?',
+        confirmLabel: '홈으로',
+        cancelLabel: '취소',
+        onTapConfirm: () {
+          Navigator.of(dialogContext).pop();
+          onPressed(context, ref);
+        },
       ),
     );
   }

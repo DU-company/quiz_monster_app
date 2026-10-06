@@ -21,7 +21,6 @@ class QuizDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final detailState = ref.watch(quizDetailViewModelProvider(qid));
     return DefaultLayout(
-      needWillPopScope: true,
       needPadding: true,
       child: _body(detailState, context),
     );
