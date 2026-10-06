@@ -33,38 +33,46 @@ class LiarGameScreen extends ConsumerWidget {
     final isLastPage = currentIndex >= playerCount;
     final isBeforeLastPage = currentIndex + 1 >= playerCount;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        LiarAppBar(
-          label: title,
-          onBackPressed: () => onBackPressed(context, ref),
-        ),
-        QuizDetailLayout(
-          body: Column(
-            children: [
-              LiarBody(
-                pageController: pageController,
-                playerCount: playerCount,
-                showAnswer: showAnswer,
-                currentIndex: currentIndex,
-                liarIndex: liarIndex,
-                items: items,
-                isLastPage: isLastPage,
-                onTapButton: isLastPage
-                    ? () => showAnswerDialog(context, ref)
-                    : () => onTapAnswer(ref),
-              ),
-            ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && (ModalRoute.of(context)?.isCurrent ?? false)) {
+          onBackPressed(context, ref);
+        }
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LiarAppBar(
+            label: title,
+            onBackPressed: () => onBackPressed(context, ref),
           ),
-          footer: LiarFooter(
-            isBeforeLastPage: isBeforeLastPage,
-            onNext: (items.isEmpty || isLastPage || !showAnswer)
-                ? null
-                : () => onNext(ref, pageController),
+          QuizDetailLayout(
+            body: Column(
+              children: [
+                LiarBody(
+                  pageController: pageController,
+                  playerCount: playerCount,
+                  showAnswer: showAnswer,
+                  currentIndex: currentIndex,
+                  liarIndex: liarIndex,
+                  items: items,
+                  isLastPage: isLastPage,
+                  onTapButton: isLastPage
+                      ? () => showAnswerDialog(context, ref)
+                      : () => onTapAnswer(ref),
+                ),
+              ],
+            ),
+            footer: LiarFooter(
+              isBeforeLastPage: isBeforeLastPage,
+              onNext: (items.isEmpty || isLastPage || !showAnswer)
+                  ? null
+                  : () => onNext(ref, pageController),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

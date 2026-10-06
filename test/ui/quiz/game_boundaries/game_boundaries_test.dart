@@ -48,6 +48,105 @@ Widget _screen(ProviderContainer container, Widget child) =>
     );
 
 void main() {
+  testWidgets('NEXT/PASS 연타와 이동 중 재입력에도 문항마다 한 번만 집계한다', (
+    tester,
+  ) async {
+    final container = ProviderContainer(
+      overrides: [
+        rewardedAdViewModelProvider.overrideWith(_NoAdViewModel.new),
+      ],
+    );
+    final controller = PageController();
+    addTearDown(container.dispose);
+    addTearDown(controller.dispose);
+    final items = [
+      for (var index = 0; index < 30; index++)
+        PassQuizDetailModel(
+          quiz: _passQuiz,
+          id: '$index',
+          level: 1,
+          answer: '같은 단어',
+        ),
+    ];
+    await tester.pumpWidget(
+      _screen(
+        container,
+        PassQuizScreen(
+          items: items,
+          pageController: controller,
+          remainingSeconds: 60,
+        ),
+      ),
+    );
+    await tester.pump();
+    final notifier = container.read(passViewModelProvider.notifier);
+    for (var index = 0; index < 30; index++) {
+      for (var tap = 0; tap < 50; tap++) {
+        notifier.onTapCorrect(controller, items[index].answer);
+        notifier.onTapPass(controller, items[index].answer);
+      }
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+      // onPageChanged가 먼저 발생해도 이동 완료 전 입력은 받지 않는다.
+      notifier.onTapCorrect(controller, '중복 입력');
+      await tester.pumpAndSettle();
+      final state = container.read(passViewModelProvider);
+      expect(state.correctWords.length, index + 1);
+      expect(state.passedWords, isEmpty);
+      expect(state.passCount, 3);
+      expect(container.read(currentIndexProvider), index + 1);
+    }
+    notifier.onTapCorrect(controller, '마지막 문항 재입력');
+    expect(
+      container.read(passViewModelProvider).correctWords.length,
+      30,
+    );
+    expect(find.text('💣 GAME OVER 💣'), findsOneWidget);
+
+    notifier.reset();
+    controller.jumpToPage(0);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('NEXT ▶'));
+    await tester.pumpAndSettle();
+    expect(
+      container.read(passViewModelProvider).correctWords.length,
+      1,
+    );
+  });
+
+  testWidgets('PASS 연타도 패스 한 번과 문항 한 개만 소비한다', (tester) async {
+    final container = ProviderContainer(
+      overrides: [
+        rewardedAdViewModelProvider.overrideWith(_NoAdViewModel.new),
+      ],
+    );
+    final controller = PageController();
+    addTearDown(container.dispose);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _screen(
+        container,
+        PassQuizScreen(
+          items: _passItems(2),
+          pageController: controller,
+          remainingSeconds: 60,
+        ),
+      ),
+    );
+    await tester.pump();
+    final notifier = container.read(passViewModelProvider.notifier);
+    for (var tap = 0; tap < 50; tap++) {
+      notifier.onTapPass(controller, '단어 0');
+      notifier.onTapCorrect(controller, '단어 0');
+    }
+    await tester.pumpAndSettle();
+    final state = container.read(passViewModelProvider);
+    expect(state.passCount, 2);
+    expect(state.passedWords, ['단어 0']);
+    expect(state.correctWords, isEmpty);
+    expect(container.read(currentIndexProvider), 1);
+  });
+
   testWidgets('패스 화면은 받은 문항이 2개면 두 번째 뒤에서 종료한다', (tester) async {
     final container = ProviderContainer(
       overrides: [

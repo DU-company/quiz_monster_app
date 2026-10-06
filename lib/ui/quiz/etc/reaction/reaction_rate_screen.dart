@@ -37,39 +37,47 @@ class ReactionRateScreen extends ConsumerWidget {
         reactionState.currentStep == 5 &&
         reactionState.result.isNotEmpty;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        /// AppBar
-        ReactionAppBar(
-          onTapBack: () => onTapBack(context),
-          step: reactionState.currentStep,
-        ),
-        // UI 멈춤 방지
-        CircularProgressIndicator(color: Colors.transparent),
-        QuizDetailLayout(
-          /// Body
-          body: isGameOver
-              ? ReactionAverageBox(
-                  testResults: reactionState.resultList,
-                )
-              : ReactionCircle(
-                  onTapCircle: viewModel.onTapCircle,
-                  isGreen: reactionState.isGreen,
-                  label: reactionState.result,
-                ),
-
-          /// Footer
-          footer: PrimaryButton(
-            label: isGameOver ? '다시 시작' : '다음',
-            onPressed: isStepOver
-                ? isGameOver
-                      ? () => shoReplayDialog(context, ref)
-                      : viewModel.onTapNext
-                : null,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && (ModalRoute.of(context)?.isCurrent ?? false)) {
+          onTapBack(context);
+        }
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          /// AppBar
+          ReactionAppBar(
+            onTapBack: () => onTapBack(context),
+            step: reactionState.currentStep,
           ),
-        ),
-      ],
+          // UI 멈춤 방지
+          CircularProgressIndicator(color: Colors.transparent),
+          QuizDetailLayout(
+            /// Body
+            body: isGameOver
+                ? ReactionAverageBox(
+                    testResults: reactionState.resultList,
+                  )
+                : ReactionCircle(
+                    onTapCircle: viewModel.onTapCircle,
+                    isGreen: reactionState.isGreen,
+                    label: reactionState.result,
+                  ),
+
+            /// Footer
+            footer: PrimaryButton(
+              label: isGameOver ? '다시 시작' : '다음',
+              onPressed: isStepOver
+                  ? isGameOver
+                        ? () => shoReplayDialog(context, ref)
+                        : viewModel.onTapNext
+                  : null,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
