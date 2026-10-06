@@ -120,9 +120,14 @@ class _PassQuizScreenState extends ConsumerState<PassQuizScreen> {
             _PassFooter(
               passCount: state.passCount,
               isGameOver: isGameOver,
+              advancing: state.advancing,
               onNextPage: () {
                 final index = ref.read(currentIndexProvider);
-                if (index < 0 || index >= itemCount) return;
+                if (widget.remainingSeconds <= 0 ||
+                    index < 0 ||
+                    index >= itemCount) {
+                  return;
+                }
                 viewModel.onTapCorrect(
                   widget.pageController,
                   widget.items[index].answer,
@@ -130,7 +135,11 @@ class _PassQuizScreenState extends ConsumerState<PassQuizScreen> {
               },
               onPass: () {
                 final index = ref.read(currentIndexProvider);
-                if (index < 0 || index >= itemCount) return;
+                if (widget.remainingSeconds <= 0 ||
+                    index < 0 ||
+                    index >= itemCount) {
+                  return;
+                }
                 viewModel.onTapPass(
                   widget.pageController,
                   widget.items[index].answer,
@@ -174,6 +183,7 @@ class _GameOver extends ConsumerWidget {
 class _PassFooter extends StatelessWidget {
   final int passCount;
   final bool isGameOver;
+  final bool advancing;
   final VoidCallback onPass;
   final VoidCallback onNextPage;
 
@@ -181,6 +191,7 @@ class _PassFooter extends StatelessWidget {
     super.key,
     required this.passCount,
     required this.isGameOver,
+    required this.advancing,
     required this.onPass,
     required this.onNextPage,
   });
@@ -194,14 +205,16 @@ class _PassFooter extends StatelessWidget {
             foregroundColor: Colors.black,
             backgroundColor: Colors.orange,
             label: 'PASS : $passCount',
-            onPressed: passCount == 0 || isGameOver ? null : onPass,
+            onPressed: passCount <= 0 || isGameOver || advancing
+                ? null
+                : onPass,
           ),
         ),
         const SizedBox(width: 64),
         Expanded(
           child: PrimaryButton(
             label: 'NEXT ▶',
-            onPressed: isGameOver ? null : onNextPage,
+            onPressed: isGameOver || advancing ? null : onNextPage,
           ),
         ),
       ],

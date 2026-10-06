@@ -9,6 +9,7 @@ import 'package:quiz_monster/ui/quiz_settings/time/set_time_screen.dart';
 final passViewModelProvider = NotifierProvider(() => PassViewModel());
 
 class PassViewModel extends Notifier<PassState> {
+  final _resolvedIndices = <int>{};
   @override
   PassState build() {
     state = PassState();
@@ -34,36 +35,59 @@ class PassViewModel extends Notifier<PassState> {
     context.pushNamed(SetTimeScreen.routeName);
 
     /// 결과 화면을 위한 pass/correct 상태값 초기화
-    state = state.copyWith(correctWords: [], passedWords: []);
+    _resolvedIndices.clear();
+    state = state.copyWith(
+      correctWords: [],
+      passedWords: [],
+      advancing: false,
+    );
   }
 
-  /// 패스 사용했을 때
-  void onTapPass(PageController pageController, String word) {
-    pageController.nextPage(
-      duration: Duration(milliseconds: 300),
-      curve: Curves.linear,
-    );
-    state = state.copyWith(
-      passCount: state.passCount - 1,
-      passedWords: [...state.passedWords, word],
-    );
-    ref
-        .read(currentIndexProvider.notifier)
-        .update((state) => state + 1);
-  }
+  Future<void> onTapPass(
+    PageController pageController,
+    String word,
+  ) => _answer(pageController, word, passed: true);
 
-  /// 문제를 맞추고 다음 버튼을 눌렀을 때
-  void onTapCorrect(PageController pageController, String word) {
-    pageController.nextPage(
-      duration: Duration(milliseconds: 300),
-      curve: Curves.linear,
-    );
+  Future<void> onTapCorrect(
+    PageController pageController,
+    String word,
+  ) => _answer(pageController, word, passed: false);
+
+  Future<void> _answer(
+    PageController controller,
+    String word, {
+    required bool passed,
+  }) async {
+    final index = ref.read(currentIndexProvider);
+    if (state.advancing ||
+        index < 0 ||
+        index >= state.itemCount ||
+        _resolvedIndices.contains(index) ||
+        passed && state.passCount <= 0 ||
+        !controller.hasClients ||
+        !controller.position.hasViewportDimension) {
+      return;
+    }
+    final page = controller.page;
+    if (page == null || (page - index).abs() > 0.001) return;
+
+    // 문항 번호로 한 번만 집계하며 NEXT/PASS가 같은 문항을 중복 처리하지 못하게 한다.
+    _resolvedIndices.add(index);
     state = state.copyWith(
-      correctWords: [...state.correctWords, word],
+      advancing: true,
+      passCount: passed ? state.passCount - 1 : state.passCount,
+      passedWords: passed ? [...state.passedWords, word] : null,
+      correctWords: passed ? null : [...state.correctWords, word],
     );
-    ref
-        .read(currentIndexProvider.notifier)
-        .update((state) => state + 1);
+    try {
+      await controller.animateToPage(
+        index + 1,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.linear,
+      );
+    } finally {
+      if (ref.mounted) state = state.copyWith(advancing: false);
+    }
   }
 
   /// 한 잔 마시고 패스 추가
@@ -85,6 +109,7 @@ class PassViewModel extends Notifier<PassState> {
   }
 
   void reset() {
+    _resolvedIndices.clear();
     state = PassState();
     ref.read(currentIndexProvider.notifier).state = 0;
   }

@@ -4,6 +4,7 @@ class PassState {
   final List<String> correctWords;
   final bool didDrink;
   final int itemCount;
+  final bool advancing;
 
   PassState({
     this.passCount = 3,
@@ -11,6 +12,7 @@ class PassState {
     this.correctWords = const [],
     this.didDrink = false,
     this.itemCount = 30,
+    this.advancing = false,
   });
 
   copyWith({
@@ -19,6 +21,7 @@ class PassState {
     List<String>? correctWords,
     bool? didDrink,
     int? itemCount,
+    bool? advancing,
   }) {
     return PassState(
       passCount: passCount ?? this.passCount,
@@ -26,6 +29,7 @@ class PassState {
       correctWords: correctWords ?? this.correctWords,
       didDrink: didDrink ?? this.didDrink,
       itemCount: itemCount ?? this.itemCount,
+      advancing: advancing ?? this.advancing,
     );
   }
 }
