@@ -98,3 +98,32 @@ deno fmt --check supabase/functions/send-notification supabase/scripts
 4. 앞의 Deno test/check/lint/fmt 명령으로 기존 전송과 예약/배치 처리 테스트를 실행한다.
 
 실제 pg_cron/pg_net 실행, Firebase 수신, 네트워크 포함 운영 처리량은 별도 배포 검증 대상이다. 예약 대기 중에는 remaining=0일 수 있으므로 state=waiting을 완료로 해석하지 않는다.
+
+
+## 퀴즈 시작 통계 RPC (Phase 2)
+
+`record_quiz_start(p_quiz_id bigint) returns void`는 비로그인 앱의 통계 전송 API다. 기존 `quiz_start_daily_counts`에 서버 KST 날짜로 1씩 원자적으로 증가시키고 `updated_at`을 요청 시작 시각으로 갱신한다. 동시 요청의 처리 순서에 따라 시각은 역행할 수 있지만 count 증가에는 영향을 주지 않는다.
+
+- 의존 테이블은 웹 저장소의 `202610040004_quiz_start_daily_counts.sql`로 이미 관리된다. 테이블이 없으면 먼저 적용 이력을 조사한다. 이 앱 디렉터리만 `db reset`하거나 기존 원격 migration을 재실행하지 않는다.
+- 신규 migration: `migrations/20261008010000_quiz_start_recording.sql`. 신규 함수만 생성하며 기존 테이블/RLS/퀴즈 RPC는 변경하지 않는다.
+- anon/authenticated는 이 RPC만 실행할 수 있다. 테이블 직접 쓰기는 계속 차단되고 관리자 조회 정책도 유지된다. 공개 RPC는 실행 사실을 증명하거나 사용자별 호출을 인증하지 않는다.
+- 앱은 ID만 전달하고 응답 유실·오프라인을 허용한다. 자동 재시도/서버 이벤트 중복 제거는 없다. 통계 전송 함수·호출 지점의 한 줄 주석은 앱 연결 단계에 적용한다(SQL에서는 `-- 통계 API 전송` 사용).
+
+### 로컬 검증
+
+원본 로컬 DB의 public/auth 스키마와 소유권·권한을 복사한 별도 `quiz_statistics_` 접두사 DB를 사용한다. quiz 카테고리 데이터만 넣고 실제 사용자/통계 데이터는 복사하지 않는다. auth 스키마 복원에는 로컬 supabase_admin 역할이 필요하다. public 스키마를 재생성하면 원본의 기본 PUBLIC USAGE가 누락될 수 있으므로 원본 ACL과 대조해 복사본만 맞춘다.
+
+```sh
+# DATABASE에는 직접 만든 격리 검증 DB 이름만 지정한다.
+docker exec -i supabase_db_quiz_monster_local psql -U postgres -d "$DATABASE" -v ON_ERROR_STOP=1 < supabase/migrations/20261008010000_quiz_start_recording.sql
+docker exec -i supabase_db_quiz_monster_local psql -U supabase_admin -d "$DATABASE" -v ON_ERROR_STOP=1 < supabase/tests/quiz_start_recording_test.sql
+python3 supabase/tests/quiz_start_recording_concurrency_test.py supabase_db_quiz_monster_local "$DATABASE"
+```
+
+SQL 테스트는 권한·잘못된 ID·관리자 조회·KST 자정 경계·갱신 시각을 검증하고 ROLLBACK한다. 시계 고정은 테스트 트랜잭션 안에서 함수 정의를 임시 교체해 검증하며 운영에 적용하지 않는다. 동시성 테스트는 비어 있는 통계 테이블을 요구하며 8개 연결로 신규 행과 기존 행에 총 400회를 기록한다. 결과는 검증 DB에만 남긴다. 재실행은 새 격리 DB에서 한다.
+
+### 복구와 적용 상태
+
+`rollback/quiz_start_recording.sql`은 신규 함수만 삭제한다. 누적 통계와 기존 RLS/권한은 보존한다. 함수 제거 동안 앱 통계는 실패하므로 이 구간 수치는 누락될 수 있다. migration 관리 시스템에 등록했다면 해당 환경에서 이 버전의 상태만 맞추거나 새 복구 migration으로 남긴다. 다른 버전의 이력은 변경하지 않는다.
+
+2026-10-08 검증: `quiz_statistics_phase2_20261008` 별도 로컬 DB에서 SQL 테스트·400회 동시 증가·rollback 후 public/auth 전체 스키마와 ACL 일치·400회 누적 보존·재적용 확인. 스키마 비교에서는 pg_dump 무작위 restrict 구분자만 제외했다. 원본 로컬 postgres DB와 운영 DB에는 RPC를 적용하지 않았다. 검증 DB는 다음 통합 검증용으로 보존했다.
