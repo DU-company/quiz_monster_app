@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quiz_monster/core/provider/quiz_start_statistics_provider.dart';
 import 'package:quiz_monster/ui/ad/ad_finished_provider.dart';
 import 'package:quiz_monster/ui/ad/interstitial_ad_view_model.dart';
 import 'package:quiz_monster/ui/common/layout/quiz_detail_layout.dart';
@@ -15,15 +16,25 @@ import 'package:quiz_monster/ui/quiz/etc/reaction/widgets/reaction_average_box.d
 import 'package:quiz_monster/ui/quiz/etc/reaction/widgets/reaction_circle.dart';
 import 'package:quiz_monster/ui/quiz/etc/reaction/widgets/replay_dialog.dart';
 
-class ReactionRateScreen extends ConsumerWidget {
+class ReactionRateScreen extends ConsumerStatefulWidget {
   const ReactionRateScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ReactionRateScreen> createState() =>
+      _ReactionRateScreenState();
+}
+
+class _ReactionRateScreenState
+    extends ConsumerState<ReactionRateScreen> {
+  bool _replayPending = false;
+
+  @override
+  Widget build(BuildContext context) {
     final viewModel = ref.read(reactionViewModelProvider.notifier);
     final reactionState = ref.watch(reactionViewModelProvider);
     ref.listen(adFinishedProvider, (p, n) async {
-      if (n == true) {
+      if (n == true && _replayPending) {
+        _replayPending = false;
         viewModel.resetScreen();
         ref.read(adFinishedProvider.notifier).onReset();
       }
@@ -94,18 +105,32 @@ class ReactionRateScreen extends ConsumerWidget {
   }
 
   void shoReplayDialog(BuildContext context, WidgetRef ref) {
+    if (_replayPending ||
+        !(ModalRoute.of(context)?.isCurrent ?? false)) {
+      return;
+    }
+    _replayPending = true;
+    var confirmed = false;
     showDialog(
       context: context,
       builder: (context) {
         return RecationReplayDialog(
           onTapReplay: () {
+            if (confirmed) return;
+            confirmed = true;
             context.pop();
+            // 통계 API 전송
+            ref
+                .read(quizStartStatisticsProvider.notifier)
+                .recordSelectedQuiz();
             ref
                 .read(interstitialAdViewModelProvider.notifier)
                 .showAd();
           },
         );
       },
-    );
+    ).whenComplete(() {
+      if (!confirmed) _replayPending = false;
+    });
   }
 }

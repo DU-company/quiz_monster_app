@@ -127,3 +127,27 @@ SQL 테스트는 권한·잘못된 ID·관리자 조회·KST 자정 경계·갱�
 `rollback/quiz_start_recording.sql`은 신규 함수만 삭제한다. 누적 통계와 기존 RLS/권한은 보존한다. 함수 제거 동안 앱 통계는 실패하므로 이 구간 수치는 누락될 수 있다. migration 관리 시스템에 등록했다면 해당 환경에서 이 버전의 상태만 맞추거나 새 복구 migration으로 남긴다. 다른 버전의 이력은 변경하지 않는다.
 
 2026-10-08 검증: `quiz_statistics_phase2_20261008` 별도 로컬 DB에서 SQL 테스트·400회 동시 증가·rollback 후 public/auth 전체 스키마와 ACL 일치·400회 누적 보존·재적용 확인. 스키마 비교에서는 pg_dump 무작위 restrict 구분자만 제외했다. 원본 로컬 postgres DB와 운영 DB에는 RPC를 적용하지 않았다. 검증 DB는 다음 통합 검증용으로 보존했다.
+
+### 앱 통계 HTTP 통합 검증 (Phase 4)
+
+`test/data/quiz_statistics_api_test.dart`는 기본 실행에서 건너뛴다. 기존 원본 로컬 DB와 운영 DB에는 실행하지 않는다. Phase 2의 격리 DB에만 연결한 임시 PostgREST를 loopback `127.0.0.1:55439`에 띄우고 다음 환경변수를 주입해 실행한다.
+
+- `QUIZ_STATISTICS_TEST_URL`: `http://127.0.0.1:55439`
+- `QUIZ_STATISTICS_TEST_ANON_KEY`: 임시 PostgREST JWT secret으로 서명한 `role=anon` 테스트 JWT
+- `QUIZ_STATISTICS_TEST_ADMIN_KEY`: 같은 secret으로 서명한 `role=authenticated`, `sub=<격리 관리자 UUID>` 테스트 JWT
+
+관리자 fixture는 격리 DB의 `auth.users`에 허용 이메일과 `email_confirmed_at`, `auth.identities`에 Google provider와 `email_verified=true`로 준비한다. JWT와 DB 연결 비밀번호는 Git·로그에 남기지 않는다. 테스트의 dart:io HTTP 프록시는 Kong 없이 PostgREST를 검증하기 위해 `/rest/v1` 접두사만 제거하며 실제 네트워크 요청·Dart DataSource·Repository를 사용한다.
+
+```sh
+flutter test test/data/quiz_statistics_api_test.dart
+```
+
+2026-10-08 검증 결과: `quiz_statistics_phase2_20261008`에만 연결한 PostgREST v16.4로 1개 테스트 통과. 퀴즈 80의 KST 당일 값이 400에서 401로 증가했고, 내장 HTTP 프록시로 정리한 최종 재검증에서 401에서 402로 증가했다. 웹 `src/lib/server/analytics.ts`와 동일한 `quiz_id,stat_date,start_count` 필드·날짜 필터·정렬·페이지 범위로 관리자 조회가 성공했고, anon 직접 조회/쓰기는 거부되었다. 잘못된 quiz ID는 Repository 예외로 변환되었다. 이는 API 계약 검증이며 기기 UI나 실제 웹 화면 검증을 대신하지 않는다.
+
+검증 후 임시 PostgREST 컨테이너와 관리자 사용자/identity, 임시 자격증명 파일을 제거했다. 격리 DB에는 검증 count 402를 유지했다. 원본 로컬 DB·운영 DB·앱 `.env`는 수정하지 않았다. 재실행은 격리 API와 관리자 fixture를 다시 준비해야 하며, 매 실행 시 해당 격리 통계만 1 증가한다.
+
+### 운영 적용 (2026-11-05)
+
+사용자 요청으로 운영 프로젝트 `ecgixrbdqlkshkpnelsa`에 `20261008010000_quiz_start_recording.sql`을 적용했다. 함수 생성·권한과 해당 migration 이력만 단일 트랜잭션으로 등록하고 PostgREST 스키마 캐시를 갱신했다. 기존 테이블 ACL과 데이터는 유지했다. anon 역할로 2회 증가, 잘못된 ID 거부, 직접 INSERT 차단을 검증한 뒤 테스트 트랜잭션 전체를 rollback했다. 최종 통계는 0행이며 테스트 수치는 남지 않았다. 적용·검증 기록은 Git 제외 `.local-backups/statistics-deploy-20261105/`에 있다. 실기기 시작 흐름·스토어 앱 배포는 별도 미완료다.
+
+2026-11-05 후속 확인: 사용자가 USB 연결 iPhone에서 실제 통계 집계 성공을 확인했다. 앱 시작 경로 연결·중복 방지와 관련 테스트를 함께 커밋한다. 광고 SDK 모든 분기의 실기기 확인과 스토어 배포까지 완료한 의미는 아니다.
