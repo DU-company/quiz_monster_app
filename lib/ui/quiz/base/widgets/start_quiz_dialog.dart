@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quiz_monster/core/theme/theme_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/ui/quiz_settings/time/set_time_view_model.dart';
@@ -34,7 +35,9 @@ class _StartQuizDialogState extends ConsumerState<StartQuizDialog> {
   Widget build(BuildContext context) {
     return BaseConfirmDialog(
       title: model.title,
-      content: model.desc,
+      contentWidget: model.desc.trim().isEmpty
+          ? null
+          : _QuizDescription(model.desc),
       confirmLabel: '시작하기',
       onTapConfirm: () => onTapStart(context, ref),
       cancelLabel: '닫기',
@@ -74,5 +77,84 @@ class _StartQuizDialogState extends ConsumerState<StartQuizDialog> {
       context.pushNamed(SetLevelScreen.routeName);
       return;
     }
+  }
+}
+
+class _QuizDescription extends ConsumerWidget {
+  final String description;
+  const _QuizDescription(this.description);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ref.watch(themeServiceProvider);
+    final lines = description.trim().split('\n');
+    final bodyStyle = theme.typo.body2.copyWith(
+      color: theme.color.secondary,
+      fontSize: 16,
+      height: 1.25,
+      fontWeight: FontWeight.normal,
+    );
+    final bulletStyle = bodyStyle.copyWith(height: 1.35);
+    final items = <Widget>[];
+    var previousWasBullet = false;
+    for (final rawLine in lines) {
+      final line = rawLine.trim();
+      if (line.isEmpty) continue;
+      final isCondition =
+          items.isEmpty && RegExp(r'^\([^()]+\)$').hasMatch(line);
+      final bullet = RegExp(r'^[-•]\s+').firstMatch(line);
+      if (items.isNotEmpty) {
+        items.add(
+          SizedBox(
+            height: previousWasBullet && bullet != null ? 4 : 2,
+          ),
+        );
+      }
+      previousWasBullet = bullet != null;
+      if (isCondition) {
+        items.add(
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 5,
+            ),
+            decoration: const ShapeDecoration(
+              color: Colors.black,
+              shape: StadiumBorder(),
+            ),
+            child: Text(
+              line.substring(1, line.length - 1),
+              style: bodyStyle.copyWith(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: theme.typo.semiBold,
+              ),
+            ),
+          ),
+        );
+      } else if (bullet != null) {
+        items.add(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('•', style: bulletStyle),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  line.substring(bullet.end),
+                  style: bulletStyle,
+                ),
+              ),
+            ],
+          ),
+        );
+      } else {
+        items.add(Text(line, style: bodyStyle));
+      }
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: items,
+    );
   }
 }

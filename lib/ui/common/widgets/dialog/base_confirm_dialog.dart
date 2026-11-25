@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:quiz_monster/core/theme/color/app_color.dart';
 import 'package:quiz_monster/core/theme/theme_provider.dart';
 import 'package:quiz_monster/ui/common/widgets/dialog/base_dialog.dart';
-import 'package:quiz_monster/ui/common/widgets/primary_button.dart';
 
 class BaseConfirmDialog extends ConsumerWidget {
   final String title;
   final String? content;
+  final Widget? contentWidget;
   final String confirmLabel;
   final VoidCallback onTapConfirm;
   final String? cancelLabel;
@@ -18,11 +17,12 @@ class BaseConfirmDialog extends ConsumerWidget {
     super.key,
     required this.title,
     this.content,
+    this.contentWidget,
     required this.confirmLabel,
     required this.onTapConfirm,
     this.cancelLabel,
     this.onTapCancel,
-  });
+  }) : assert(content == null || contentWidget == null);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,71 +40,62 @@ class BaseConfirmDialog extends ConsumerWidget {
               color: theme.color.secondary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
 
           /// Content
-          if (content != null)
-            Text(
-              content!,
-              style: theme.typo.subtitle2.copyWith(
-                color: theme.color.onHintContainer,
-                fontWeight: theme.typo.semiBold,
+          if (content != null || contentWidget != null) ...[
+            Flexible(
+              child: SingleChildScrollView(
+                child:
+                    contentWidget ??
+                    Text(
+                      content!,
+                      style: theme.typo.body2.copyWith(
+                        color: theme.color.secondary,
+                        fontSize: 16,
+                        height: 1.25,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
               ),
             ),
-          if (content != null) const SizedBox(height: 12),
-
-          _Buttons(
-            onTapConfirm: onTapConfirm,
-            cancelLabel: cancelLabel,
-            onTapCancel: onTapCancel ?? () => context.pop(),
-            confirmLabel: confirmLabel,
+            const SizedBox(height: 16),
+          ],
+          OverflowBar(
+            overflowAlignment: OverflowBarAlignment.end,
+            overflowSpacing: 4,
+            alignment: MainAxisAlignment.end,
+            spacing: 8,
+            children: [
+              if (cancelLabel != null)
+                TextButton(
+                  onPressed: onTapCancel ?? () => context.pop(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.color.subtext,
+                  ),
+                  child: Text(cancelLabel!),
+                ),
+              FilledButton(
+                onPressed: onTapConfirm,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(112, 48),
+                  backgroundColor: theme.color.secondary,
+                  foregroundColor: theme.color.onSecondary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  confirmLabel,
+                  style: theme.typo.subtitle1.copyWith(
+                    color: theme.color.onSecondary,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Buttons extends ConsumerWidget {
-  final VoidCallback onTapConfirm;
-  final String? cancelLabel;
-  final String confirmLabel;
-  final VoidCallback onTapCancel;
-  const _Buttons({
-    required this.onTapConfirm,
-    required this.cancelLabel,
-    required this.confirmLabel,
-    required this.onTapCancel,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final color = ref.read(themeServiceProvider).color;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        renderConfirmButton(),
-        if (cancelLabel != null) const SizedBox(height: 8),
-        if (cancelLabel != null) renderCancelButton(color),
-      ],
-    );
-  }
-
-  Widget renderConfirmButton() {
-    return PrimaryButton(
-      onPressed: onTapConfirm,
-      label: confirmLabel,
-    );
-  }
-
-  Widget renderCancelButton(AppColor color) {
-    return PrimaryButton(
-      onPressed: onTapCancel,
-      label: cancelLabel ?? '',
-      backgroundColor: color.onSecondary,
-      foregroundColor: color.subtext,
-      borderColor: color.subtext,
     );
   }
 }

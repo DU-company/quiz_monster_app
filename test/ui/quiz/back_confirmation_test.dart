@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/ui/common/layout/default_layout.dart';
 import 'package:quiz_monster/ui/common/widgets/dialog/base_confirm_dialog.dart';
-import 'package:quiz_monster/ui/common/widgets/primary_button.dart';
 import 'package:quiz_monster/ui/quiz/base/quiz_screen.dart';
 import 'package:quiz_monster/ui/quiz/etc/liar/liar_screen.dart';
 import 'package:quiz_monster/ui/quiz/pass/pass_result_screen.dart';
@@ -66,7 +65,7 @@ void main() {
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       await tester.tap(
-        find.widgetWithText(PrimaryButton, result ? '홈으로' : '종료하기'),
+        find.widgetWithText(FilledButton, result ? '홈으로' : '종료하기'),
       );
       await tester.pumpAndSettle();
       expect(find.text('테스트 홈'), findsOneWidget);
