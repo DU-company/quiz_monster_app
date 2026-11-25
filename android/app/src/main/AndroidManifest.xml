@@ -5,6 +5,9 @@
         android:label="퀴즈몬스터"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_quiz_monster" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
