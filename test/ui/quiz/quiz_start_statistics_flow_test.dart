@@ -11,6 +11,7 @@ import 'package:quiz_monster/ui/ad/ad_finished_provider.dart';
 import 'package:quiz_monster/ui/ad/interstitial_ad_view_model.dart';
 import 'package:quiz_monster/ui/common/widgets/dialog/base_confirm_dialog.dart';
 import 'package:quiz_monster/ui/quiz/base/widgets/start_quiz_dialog.dart';
+import 'package:quiz_monster/ui/quiz/etc/liar/liar_view_model.dart';
 import 'package:quiz_monster/ui/quiz/etc/reaction/reaction_rate_screen.dart';
 import 'package:quiz_monster/ui/quiz/etc/reaction/view_model/reaction_view_model.dart';
 import 'package:quiz_monster/ui/quiz/etc/reaction/widgets/replay_dialog.dart';
@@ -139,21 +140,47 @@ void main() {
     expect(container.read(adFinishedProvider), true);
   });
 
-  testWidgets(
-    'liar new settings attempt counts again and preserves player selection',
-    (tester) async {
-      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
-      final context = tester.element(find.byType(SizedBox));
+  test(
+    'liar selection respects player limits and assigns distinct roles',
+    () {
+      final players = container.read(
+        playerViewModelProvider.notifier,
+      );
+      final liars = container.read(liarCountProvider.notifier);
+      players.increasePlayer();
+      liars.setCount(99);
+      final roles = container.read(liarViewModelProvider);
+      expect(roles.length, 3);
+      expect(roles.every((index) => index >= 0 && index < 4), isTrue);
+      expect(container.read(liarViewModelProvider), same(roles));
+      players.decreasePlayer();
+      expect(container.read(liarCountProvider), 2);
+      players.decreasePlayer();
+      players.decreasePlayer();
+      liars.setCount(0);
+      expect(container.read(playerViewModelProvider), 3);
+      expect(container.read(liarCountProvider), 1);
+      expect(container.read(liarViewModelProvider).length, 1);
+    },
+  );
+
+  test(
+    'liar new settings attempt counts again and preserves player and liar counts',
+    () async {
       container.read(selectedQuizProvider.notifier).state = quiz(41);
-      final vm = container.read(playerViewModelProvider.notifier);
-      vm.increasePlayer();
-      vm.onStart(context);
-      vm.onStart(context);
+      container
+          .read(playerViewModelProvider.notifier)
+          .increasePlayer();
+      final vm = container.read(liarCountProvider.notifier);
+      vm.setCount(2);
+      vm.onStart();
+      vm.onStart();
       expect(source.ids, [41]);
       vm.prepareStart();
+      expect(container.read(liarCountProvider), 2);
       expect(container.read(playerViewModelProvider), 4);
-      vm.onStart(context);
-      await tester.pump();
+      container.read(liarCountProvider.notifier).onStart();
+      await container.pump();
       expect(source.ids, [41, 41]);
       expect(ad.starts, 2);
     },

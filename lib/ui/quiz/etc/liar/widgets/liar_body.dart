@@ -10,7 +10,7 @@ class LiarBody extends ConsumerWidget {
   final int playerCount;
   final bool showAnswer;
   final int currentIndex;
-  final int liarIndex;
+  final Set<int> liarIndices;
   final bool isLastPage;
   final VoidCallback onTapButton;
   const LiarBody({
@@ -19,7 +19,7 @@ class LiarBody extends ConsumerWidget {
     required this.playerCount,
     required this.showAnswer,
     required this.currentIndex,
-    required this.liarIndex,
+    required this.liarIndices,
     required this.items,
     required this.isLastPage,
     required this.onTapButton,
@@ -42,7 +42,7 @@ class LiarBody extends ConsumerWidget {
         itemCount: playerCount + 1,
         itemBuilder: (context, index) {
           final model = items.first;
-          final isLiar = index == liarIndex;
+          final isLiar = liarIndices.contains(index);
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 2),
             child: Column(
