@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/data/models/quiz_detail_model.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
-import 'package:quiz_monster/data/models/quiz_type.dart';
+import 'package:quiz_monster/data/entities/quiz_entity.dart';
 import 'package:quiz_monster/ui/quiz/base/quiz_screen.dart';
 import 'package:quiz_monster/core/provider/page_controller_provider.dart';
 import 'package:quiz_monster/ui/quiz/etc/fly/fly_screen.dart';

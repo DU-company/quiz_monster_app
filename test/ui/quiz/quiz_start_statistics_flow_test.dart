@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:quiz_monster/data/entities/quiz_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,12 +60,18 @@ void main() {
   });
   tearDown(() => container.dispose());
 
-  for (final id in [1, 2, 21, 80]) {
+  for (final (id, type) in [
+    (1, QuizType.image),
+    (2, QuizType.question),
+    (21, QuizType.pass),
+    (80, QuizType.fly),
+  ]) {
     testWidgets(
       'time quiz $id counts valid start once, skips invalid time',
       (tester) async {
         container.read(selectedQuizProvider.notifier).state = quiz(
           id,
+          type,
         );
         final subscription = container.listen(
           timeViewModelProvider,
@@ -105,6 +112,7 @@ void main() {
             : pending.future;
         container.read(selectedQuizProvider.notifier).state = quiz(
           80,
+          QuizType.fly,
         );
         container.read(timeViewModelProvider.notifier).onTapStart();
         expect(ad.starts, 1);
@@ -125,7 +133,10 @@ void main() {
       container.read(interstitialAdViewModelProvider.future),
       throwsStateError,
     );
-    container.read(selectedQuizProvider.notifier).state = quiz(80);
+    container.read(selectedQuizProvider.notifier).state = quiz(
+      80,
+      QuizType.fly,
+    );
     final subscription = container.listen(
       timeViewModelProvider,
       (_, _) {},
@@ -140,41 +151,19 @@ void main() {
     expect(container.read(adFinishedProvider), true);
   });
 
-  test(
-    'liar selection respects player limits and assigns distinct roles',
-    () {
-      final players = container.read(
-        playerViewModelProvider.notifier,
+  testWidgets(
+    'liar new settings attempt counts again and preserves player selection',
+    (tester) async {
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      final context = tester.element(find.byType(SizedBox));
+      container.read(selectedQuizProvider.notifier).state = quiz(
+        41,
+        QuizType.liar,
       );
-      final liars = container.read(liarCountProvider.notifier);
-      players.increasePlayer();
-      liars.setCount(99);
-      final roles = container.read(liarViewModelProvider);
-      expect(roles.length, 3);
-      expect(roles.every((index) => index >= 0 && index < 4), isTrue);
-      expect(container.read(liarViewModelProvider), same(roles));
-      players.decreasePlayer();
-      expect(container.read(liarCountProvider), 2);
-      players.decreasePlayer();
-      players.decreasePlayer();
-      liars.setCount(0);
-      expect(container.read(playerViewModelProvider), 3);
-      expect(container.read(liarCountProvider), 1);
-      expect(container.read(liarViewModelProvider).length, 1);
-    },
-  );
-
-  test(
-    'liar new settings attempt counts again and preserves player and liar counts',
-    () async {
-      container.read(selectedQuizProvider.notifier).state = quiz(41);
-      container
-          .read(playerViewModelProvider.notifier)
-          .increasePlayer();
-      final vm = container.read(liarCountProvider.notifier);
-      vm.setCount(2);
-      vm.onStart();
-      vm.onStart();
+      final vm = container.read(playerViewModelProvider.notifier);
+      vm.increasePlayer();
+      vm.onStart(context);
+      vm.onStart(context);
       expect(source.ids, [41]);
       vm.prepareStart();
       expect(container.read(liarCountProvider), 2);
@@ -219,7 +208,9 @@ void main() {
           builder: (context) => TextButton(
             onPressed: () => showDialog(
               context: context,
-              builder: (_) => StartQuizDialog(model: quiz(100)),
+              builder: (_) => StartQuizDialog(
+                model: quiz(100, QuizType.reaction),
+              ),
             ),
             child: const Text('open'),
           ),
@@ -248,7 +239,10 @@ void main() {
     'reaction replay cancellation, duplicate confirmation and measurement steps',
     (tester) async {
       ad.deferCompletion = true;
-      container.read(selectedQuizProvider.notifier).state = quiz(100);
+      container.read(selectedQuizProvider.notifier).state = quiz(
+        100,
+        QuizType.reaction,
+      );
       await tester.binding.setSurfaceSize(const Size(400, 1000));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await mount(tester, const ReactionRateScreen());

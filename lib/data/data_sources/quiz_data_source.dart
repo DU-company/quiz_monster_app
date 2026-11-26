@@ -19,6 +19,7 @@ class QuizDataSource {
     final resp = await supabase
         .from('quiz')
         .select()
+        .order('priority', ascending: true)
         .order('id', ascending: true);
     return resp.map(QuizEntity.fromJson).toList();
   }

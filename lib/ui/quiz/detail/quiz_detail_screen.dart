@@ -10,7 +10,7 @@ import 'package:quiz_monster/ui/common/widgets/error_message_widget.dart';
 import 'package:quiz_monster/ui/common/widgets/loading_widget.dart';
 import 'package:quiz_monster/ui/quiz/detail/view_model/quiz_detail_view_model.dart';
 import 'package:quiz_monster/ui/quiz/etc/reaction/reaction_rate_screen.dart';
-import 'package:quiz_monster/data/models/quiz_type.dart';
+import 'package:quiz_monster/data/entities/quiz_entity.dart';
 
 class QuizDetailScreen extends ConsumerWidget {
   static String get routeName => 'quiz-detail';

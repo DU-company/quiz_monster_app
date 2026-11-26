@@ -8,7 +8,7 @@ import 'package:quiz_monster/ui/quiz/etc/liar/liar_view_model.dart';
 import 'package:quiz_monster/core/provider/selected_quiz_provider.dart';
 import 'package:quiz_monster/core/utils/data_utils.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
-import 'package:quiz_monster/data/models/quiz_type.dart';
+import 'package:quiz_monster/data/entities/quiz_entity.dart';
 import 'package:quiz_monster/ui/quiz/detail/widgets/quiz_detail_success_view.dart';
 import 'package:quiz_monster/ui/quiz_settings/level/level_provider.dart';
 import 'package:quiz_monster/ui/quiz_settings/player/set_player_screen.dart';

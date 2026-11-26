@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:quiz_monster/core/provider/quiz_start_statistics_provider.dart';
 import 'package:quiz_monster/core/provider/selected_quiz_provider.dart';
-import 'package:quiz_monster/data/models/quiz_type.dart';
+import 'package:quiz_monster/data/entities/quiz_entity.dart';
 import 'package:quiz_monster/core/utils/data_utils.dart';
 import 'package:quiz_monster/ui/ad/ad_count_provider.dart';
 import 'package:quiz_monster/ui/ad/interstitial_ad_view_model.dart';
