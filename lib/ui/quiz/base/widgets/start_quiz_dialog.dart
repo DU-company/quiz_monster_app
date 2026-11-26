@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quiz_monster/ui/quiz_settings/time/set_time_view_model.dart';
 import 'package:quiz_monster/core/provider/quiz_start_statistics_provider.dart';
-import 'package:quiz_monster/ui/quiz_settings/player/set_player_view_model.dart';
+import 'package:quiz_monster/ui/quiz/etc/liar/liar_view_model.dart';
 import 'package:quiz_monster/core/provider/selected_quiz_provider.dart';
 import 'package:quiz_monster/core/utils/data_utils.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
@@ -57,7 +57,7 @@ class _StartQuizDialogState extends ConsumerState<StartQuizDialog> {
     ref.read(currentIndexProvider.notifier).state = 0;
 
     if (model.type == QuizType.liar) {
-      ref.read(playerViewModelProvider.notifier).prepareStart();
+      ref.read(liarCountProvider.notifier).prepareStart();
       context.pushNamed(PlayerScreen.routeName);
       return;
     }

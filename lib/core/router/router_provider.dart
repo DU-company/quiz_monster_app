@@ -1,3 +1,4 @@
+import 'package:quiz_monster/ui/quiz/etc/liar/liar_count_screen.dart';
 import 'package:quiz_monster/ui/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -91,8 +92,23 @@ final goRouterProvider = Provider((ref) {
       GoRoute(
         path: '/player',
         name: PlayerScreen.routeName,
-        pageBuilder: (context, state) =>
-            buildSlidePage(context, state, child: PlayerScreen()),
+        pageBuilder: (context, state) => buildSlidePage(
+          context,
+          state,
+          child: PlayerScreen(
+            onNext: () =>
+                context.pushNamed(LiarCountScreen.routeName),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/liar-count',
+        name: LiarCountScreen.routeName,
+        pageBuilder: (context, state) => buildSlidePage(
+          context,
+          state,
+          child: const LiarCountScreen(),
+        ),
       ),
       GoRoute(
         path: '/time-count',
