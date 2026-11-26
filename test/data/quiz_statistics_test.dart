@@ -6,8 +6,7 @@ import 'package:quiz_monster/core/provider/quiz_start_statistics_provider.dart';
 import 'package:quiz_monster/core/provider/selected_quiz_provider.dart';
 import 'package:quiz_monster/data/data_sources/quiz_statistics_data_source.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
-import 'package:quiz_monster/data/models/quiz_group.dart';
-import 'package:quiz_monster/data/models/quiz_type.dart';
+import 'package:quiz_monster/data/entities/quiz_entity.dart';
 import 'package:quiz_monster/data/repositories/quiz_statistics_repository.dart';
 
 class FakeStatisticsSource implements QuizStatisticsDataSource {
@@ -20,14 +19,15 @@ class FakeStatisticsSource implements QuizStatisticsDataSource {
   }
 }
 
-QuizModel quiz(int id) => QuizModel(
-  id: id,
-  title: 'test',
-  subTitle: '',
-  desc: '',
-  type: resolveQuizType(id),
-  group: resolveQuizGroup(id),
-);
+QuizModel quiz(int id, [QuizType type = QuizType.question]) =>
+    QuizModel(
+      id: id,
+      title: 'test',
+      subTitle: '',
+      desc: '',
+      type: type,
+      group: QuizGroup.guess,
+    );
 
 void main() {
   late FakeStatisticsSource source;

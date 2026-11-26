@@ -9,7 +9,7 @@ import 'package:quiz_monster/ui/ad/ad_finished_provider.dart';
 import 'package:quiz_monster/ui/ad/interstitial_ad_view_model.dart';
 import 'package:quiz_monster/ui/common/widgets/primary_button.dart';
 import 'package:quiz_monster/core/provider/selected_quiz_provider.dart';
-import 'package:quiz_monster/data/models/quiz_type.dart';
+import 'package:quiz_monster/data/entities/quiz_entity.dart';
 import 'package:quiz_monster/core/theme/responsive/layout.dart';
 import 'package:quiz_monster/core/utils/data_utils.dart';
 import 'package:quiz_monster/ui/common/layout/setting_layout.dart';

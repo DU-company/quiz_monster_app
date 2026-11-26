@@ -1,9 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quiz_monster/core/provider/selected_quiz_provider.dart';
-import 'package:quiz_monster/data/models/quiz_group.dart';
+import 'package:quiz_monster/data/entities/quiz_entity.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
-import 'package:quiz_monster/data/models/quiz_type.dart';
 import 'package:quiz_monster/ui/quiz/detail/view_model/quiz_detail_state.dart';
 import 'package:quiz_monster/ui/quiz/detail/view_model/quiz_detail_view_model.dart';
 

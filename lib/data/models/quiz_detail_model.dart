@@ -1,7 +1,7 @@
 import 'package:quiz_monster/core/exception/quiz_exception.dart';
 import 'package:quiz_monster/data/entities/quiz_detail_entity.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
-import 'package:quiz_monster/data/models/quiz_type.dart';
+import 'package:quiz_monster/data/entities/quiz_entity.dart';
 import 'package:quiz_monster/data/models/quiz_details/image_quiz_detail_model.dart';
 import 'package:quiz_monster/data/models/quiz_details/liar_quiz_detail_model.dart';
 import 'package:quiz_monster/data/models/quiz_details/pass_quiz_detail_model.dart';

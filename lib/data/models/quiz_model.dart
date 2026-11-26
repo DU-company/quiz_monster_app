@@ -1,6 +1,4 @@
 import 'package:quiz_monster/data/entities/quiz_entity.dart';
-import 'package:quiz_monster/data/models/quiz_group.dart';
-import 'package:quiz_monster/data/models/quiz_type.dart';
 
 /// 카테고리 표시 정보와 해석된 진행 타입 및 목록 그룹을 담는 화면용 모델.
 class QuizModel {
@@ -25,7 +23,7 @@ class QuizModel {
     title: entity.title,
     subTitle: entity.subTitle,
     desc: entity.desc,
-    type: resolveQuizType(entity.id),
-    group: resolveQuizGroup(entity.id),
+    type: entity.gameType,
+    group: entity.quizGroup,
   );
 }

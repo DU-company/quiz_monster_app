@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:quiz_monster/data/models/quiz_group.dart';
+import 'package:quiz_monster/data/entities/quiz_entity.dart';
 import 'package:quiz_monster/data/models/quiz_model.dart';
 import 'package:quiz_monster/ui/quiz/base/widgets/quiz_app_bar.dart';
 import 'package:quiz_monster/ui/quiz/base/widgets/quiz_card.dart';
