@@ -260,7 +260,7 @@ void main() {
           playerCount: 3,
           showAnswer: false,
           currentIndex: 0,
-          liarIndex: 1,
+          liarIndices: {1},
           isLastPage: false,
           onTapButton: () {},
         ),

@@ -12,6 +12,7 @@ import 'package:quiz_monster/ui/ad/ad_finished_provider.dart';
 import 'package:quiz_monster/ui/ad/interstitial_ad_view_model.dart';
 import 'package:quiz_monster/ui/common/widgets/dialog/base_confirm_dialog.dart';
 import 'package:quiz_monster/ui/quiz/base/widgets/start_quiz_dialog.dart';
+import 'package:quiz_monster/ui/quiz/etc/liar/liar_view_model.dart';
 import 'package:quiz_monster/ui/quiz/etc/reaction/reaction_rate_screen.dart';
 import 'package:quiz_monster/ui/quiz/etc/reaction/view_model/reaction_view_model.dart';
 import 'package:quiz_monster/ui/quiz/etc/reaction/widgets/replay_dialog.dart';
@@ -165,9 +166,10 @@ void main() {
       vm.onStart(context);
       expect(source.ids, [41]);
       vm.prepareStart();
+      expect(container.read(liarCountProvider), 2);
       expect(container.read(playerViewModelProvider), 4);
-      vm.onStart(context);
-      await tester.pump();
+      container.read(liarCountProvider.notifier).onStart();
+      await container.pump();
       expect(source.ids, [41, 41]);
       expect(ad.starts, 2);
     },

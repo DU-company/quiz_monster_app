@@ -22,7 +22,7 @@ class LiarGameScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     /// State
-    final liarIndex = ref.watch(liarViewModelProvider);
+    final liarIndices = ref.watch(liarViewModelProvider);
     final playerCount = ref.watch(playerViewModelProvider);
     final currentIndex = ref.watch(currentIndexProvider);
 
@@ -55,7 +55,7 @@ class LiarGameScreen extends ConsumerWidget {
                   playerCount: playerCount,
                   showAnswer: showAnswer,
                   currentIndex: currentIndex,
-                  liarIndex: liarIndex,
+                  liarIndices: liarIndices,
                   items: items,
                   isLastPage: isLastPage,
                   onTapButton: isLastPage
