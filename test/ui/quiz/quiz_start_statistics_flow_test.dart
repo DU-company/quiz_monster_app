@@ -154,21 +154,22 @@ void main() {
   testWidgets(
     'liar new settings attempt counts again and preserves player selection',
     (tester) async {
-      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
-      final context = tester.element(find.byType(SizedBox));
       container.read(selectedQuizProvider.notifier).state = quiz(
         41,
         QuizType.liar,
       );
-      final vm = container.read(playerViewModelProvider.notifier);
-      vm.increasePlayer();
-      vm.onStart(context);
-      vm.onStart(context);
+      container
+          .read(playerViewModelProvider.notifier)
+          .increasePlayer();
+      final vm = container.read(liarCountProvider.notifier);
+      vm.setCount(2);
+      vm.onStart();
+      vm.onStart();
       expect(source.ids, [41]);
       vm.prepareStart();
       expect(container.read(liarCountProvider), 2);
       expect(container.read(playerViewModelProvider), 4);
-      container.read(liarCountProvider.notifier).onStart();
+      vm.onStart();
       await container.pump();
       expect(source.ids, [41, 41]);
       expect(ad.starts, 2);
